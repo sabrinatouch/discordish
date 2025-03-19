@@ -1,35 +1,132 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { supabase } from './lib/supabase';
+import Login from './components/auth/Login';
+import Signup from './components/auth/Signup';
+import Sidebar from './components/layout/Sidebar';
+import ChannelList from './components/layout/ChannelList';
+import ChatView from './components/messages/ChatView';
+import UserProfile from './components/user/UserProfile';
+import Settings from './components/user/Settings';
 
-function App() {
-  const [count, setCount] = useState(0)
+// Protected Route wrapper component
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [loading, setLoading] = React.useState(true);
+  const [user, setUser] = React.useState<any>(null);
 
+  React.useEffect(() => {
+    const checkUser = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      } catch (error) {
+        console.error('Error checking user:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
+
+  return <>{children}</>;
+};
+
+const App: React.FC = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <Router>
+      <Routes>
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
 
-export default App
+        {/* Protected Routes */}
+        <Route
+          path="/channels/:serverId/:channelId"
+          element={
+            <ProtectedRoute>
+              <div className="flex h-screen">
+                <Sidebar />
+                <ChannelList />
+                <ChatView />
+              </div>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/channels/@me"
+          element={
+            <ProtectedRoute>
+              <div className="flex h-screen">
+                <Sidebar />
+                <div className="flex-1 bg-gray-700 flex items-center justify-center">
+                  <h1 className="text-white text-2xl">Welcome to your DMs!</h1>
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* User Profile Route */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <div className="flex h-screen">
+                <Sidebar />
+                <div className="flex-1 bg-gray-700">
+                  <UserProfile />
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Settings Route */}
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute>
+              <div className="flex h-screen">
+                <Sidebar />
+                <div className="flex-1 bg-gray-700">
+                  <Settings />
+                </div>
+              </div>
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Redirect root to login or home */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Navigate to="/channels/@me" replace />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </Router>
+  );
+};
+
+export default App;
