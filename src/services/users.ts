@@ -5,7 +5,7 @@ export interface UpdateProfileData {
   username?: string;
   email?: string;
   avatar_url?: string;
-  status?: string;
+  status?: 'online' | 'offline' | 'idle' | 'dnd' | 'invisible';
 }
 
 export const userService = {

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { mockChannels, mockServers } from '../../lib/mockData';
 
 interface Channel {
   id: string;
@@ -9,33 +10,85 @@ interface Channel {
   server_id: string;
 }
 
+interface Server {
+  id: string;
+  name: string;
+  icon_url: string | null;
+}
+
 const ChannelList: React.FC = () => {
-  const [channels, setChannels] = React.useState<Channel[]>([]);
-  const [loading, setLoading] = React.useState(true);
   const { serverId } = useParams<{ serverId: string }>();
   const location = useLocation();
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [currentServer, setCurrentServer] = useState<Server | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
-    const fetchChannels = async () => {
-      if (!serverId) return;
-
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch server data
+        const { data: serverData, error: serverError } = await supabase
+          .from('servers')
+          .select('*')
+          .eq('id', serverId)
+          .single();
+
+        if (serverError) throw serverError;
+        setCurrentServer(serverData);
+
+        // Fetch channels
+        const { data: channelData, error: channelError } = await supabase
           .from('channels')
           .select('*')
           .eq('server_id', serverId)
           .order('name');
 
-        if (error) throw error;
-        setChannels(data || []);
+        if (channelError) throw channelError;
+        setChannels(channelData || []);
       } catch (error) {
-        console.error('Error fetching channels:', error);
+        console.error('Error fetching data:', error);
+        // Fallback to mock data
+        const mockServer = mockServers.find(server => server.id === serverId);
+        const mockChannelList = mockChannels.filter(channel => channel.server_id === serverId);
+        setCurrentServer(mockServer || null);
+        setChannels(mockChannelList);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchChannels();
+    fetchData();
+
+    // Subscribe to channel changes
+    const subscription = supabase
+      .channel(`channels:${serverId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'channels',
+          filter: `server_id=eq.${serverId}`,
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setChannels(prev => [...prev, payload.new as Channel]);
+          } else if (payload.eventType === 'DELETE') {
+            setChannels(prev => prev.filter(channel => channel.id !== payload.old.id));
+          } else if (payload.eventType === 'UPDATE') {
+            setChannels(prev =>
+              prev.map(channel =>
+                channel.id === payload.new.id ? (payload.new as Channel) : channel
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [serverId]);
 
   if (loading) {
@@ -46,11 +99,19 @@ const ChannelList: React.FC = () => {
     );
   }
 
+  if (!currentServer) {
+    return (
+      <div className="w-60 h-screen bg-gray-800 flex items-center justify-center">
+        <div className="text-white">Server not found</div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-60 h-screen bg-gray-800 flex flex-col">
       {/* Server Header */}
       <div className="h-12 flex items-center px-4 border-b border-gray-700">
-        <h2 className="text-white font-semibold">Server Name</h2>
+        <h2 className="text-white font-semibold">{currentServer.name}</h2>
       </div>
 
       {/* Channel List */}

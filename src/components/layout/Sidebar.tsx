@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { mockServers } from '../../lib/mockData';
 
 interface Server {
   id: string;
@@ -8,19 +9,12 @@ interface Server {
   icon_url: string | null;
 }
 
-interface DMChannel {
-  id: string;
-  name: string;
-  avatar_url: string | null;
-}
-
 const Sidebar: React.FC = () => {
-  const [servers, setServers] = React.useState<Server[]>([]);
-  const [dmChannels, setDmChannels] = React.useState<DMChannel[]>([]);
-  const [loading, setLoading] = React.useState(true);
   const location = useLocation();
+  const [servers, setServers] = useState<Server[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchServers = async () => {
       try {
         const { data, error } = await supabase
@@ -32,31 +26,53 @@ const Sidebar: React.FC = () => {
         setServers(data || []);
       } catch (error) {
         console.error('Error fetching servers:', error);
-      }
-    };
-
-    const fetchDMChannels = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
-        const { data, error } = await supabase
-          .from('direct_messages')
-          .select('*, users!direct_messages_user_id_fkey(*)')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        setDmChannels(data || []);
-      } catch (error) {
-        console.error('Error fetching DM channels:', error);
+        // Fallback to mock data
+        setServers(mockServers);
       } finally {
         setLoading(false);
       }
     };
 
     fetchServers();
-    fetchDMChannels();
+
+    // Subscribe to server changes
+    const subscription = supabase
+      .channel('servers')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'servers',
+        },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setServers(prev => [...prev, payload.new as Server]);
+          } else if (payload.eventType === 'DELETE') {
+            setServers(prev => prev.filter(server => server.id !== payload.old.id));
+          } else if (payload.eventType === 'UPDATE') {
+            setServers(prev =>
+              prev.map(server =>
+                server.id === payload.new.id ? (payload.new as Server) : server
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
+
+  if (loading) {
+    return (
+      <div className="w-60 h-screen bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-60 h-screen bg-gray-900 flex flex-col">
@@ -109,14 +125,17 @@ const Sidebar: React.FC = () => {
 
       {/* User Settings */}
       <div className="p-2">
-        <button className="flex items-center w-full p-2 rounded hover:bg-gray-700 transition-colors">
+        <Link
+          to="/settings"
+          className="flex items-center w-full p-2 rounded hover:bg-gray-700 transition-colors"
+        >
           <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </div>
           <span className="ml-3 text-sm text-gray-300">User Settings</span>
-        </button>
+        </Link>
       </div>
     </div>
   );

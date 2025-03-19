@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import { mockUsers } from '../../lib/mockData';
 
 interface UserProfile {
   id: string;
   username: string;
   avatar_url: string | null;
-  status: 'online' | 'offline' | 'idle' | 'dnd';
+  status: 'online' | 'offline' | 'idle' | 'dnd' | 'invisible';
   bio: string | null;
 }
 
 const UserProfile: React.FC = () => {
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<UserProfile>(mockUsers[0]);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,8 +62,6 @@ const UserProfile: React.FC = () => {
   }, []);
 
   const handleStatusChange = async (newStatus: UserProfile['status']) => {
-    if (!profile) return;
-
     try {
       const { error } = await supabase
         .from('users')
@@ -70,6 +69,7 @@ const UserProfile: React.FC = () => {
         .eq('id', profile.id);
 
       if (error) throw error;
+      setProfile(prev => ({ ...prev, status: newStatus }));
     } catch (error) {
       console.error('Error updating status:', error);
       setError('Failed to update status');
@@ -78,8 +78,6 @@ const UserProfile: React.FC = () => {
 
   const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!profile) return;
-
     const formData = new FormData(e.currentTarget);
     const updates = {
       username: formData.get('username') as string,
@@ -93,6 +91,7 @@ const UserProfile: React.FC = () => {
         .eq('id', profile.id);
 
       if (error) throw error;
+      setProfile(prev => ({ ...prev, ...updates }));
       setIsEditing(false);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -106,10 +105,6 @@ const UserProfile: React.FC = () => {
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
       </div>
     );
-  }
-
-  if (!profile) {
-    return <div className="text-red-500">Profile not found</div>;
   }
 
   return (
@@ -137,6 +132,8 @@ const UserProfile: React.FC = () => {
                 ? 'bg-yellow-500'
                 : profile.status === 'dnd'
                 ? 'bg-red-500'
+                : profile.status === 'invisible'
+                ? 'bg-gray-400'
                 : 'bg-gray-500'
             }`}
           />
@@ -197,7 +194,7 @@ const UserProfile: React.FC = () => {
           <div className="mb-6">
             <h3 className="text-lg font-medium text-white mb-2">Status</h3>
             <div className="flex space-x-2">
-              {(['online', 'idle', 'dnd', 'offline'] as const).map((status) => (
+              {(['online', 'idle', 'dnd', 'offline', 'invisible'] as const).map((status) => (
                 <button
                   key={status}
                   onClick={() => handleStatusChange(status)}

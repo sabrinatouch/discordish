@@ -30,12 +30,15 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-md">
-        <h2 className="text-2xl font-bold text-white mb-6 text-center">Welcome Back</h2>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#1E1F22] px-4">
+      <div className="bg-[#2B2D31] p-8 rounded-md shadow-2xl w-full max-w-[480px]">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-bold text-white">Welcome back!</h2>
+          <p className="text-[#B5BAC1] mt-1">We're so excited to see you again!</p>
+        </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="email" className="uppercase block text-xs font-bold text-[#B5BAC1] mb-2">
               Email
             </label>
             <input
@@ -43,12 +46,13 @@ const Login: React.FC = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-[#1E1F22] text-[#DBDEE1] placeholder-[#949BA4] rounded-[3px] border border-[#1E1F22] focus:border-[#5865F2] focus:ring-0 text-sm"
+              placeholder="Enter your email"
               required
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300">
+            <label htmlFor="password" className="uppercase block text-xs font-bold text-[#B5BAC1] mb-2">
               Password
             </label>
             <input
@@ -56,29 +60,30 @@ const Login: React.FC = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              className="w-full px-3 py-2 bg-[#1E1F22] text-[#DBDEE1] placeholder-[#949BA4] rounded-[3px] border border-[#1E1F22] focus:border-[#5865F2] focus:ring-0 text-sm"
+              placeholder="Enter your password"
               required
             />
           </div>
           {error && (
-            <div className="text-red-500 text-sm">{error}</div>
+            <div className="text-[#FA777C] text-sm font-medium bg-[#FA777C]/10 p-3 rounded">
+              {error}
+            </div>
           )}
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="w-full py-2.5 px-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-[3px] font-medium text-sm transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
           >
-            {loading ? 'Signing in...' : 'Sign in'}
+            {loading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-400">
-            Don't have an account?{' '}
-            <a href="/signup" className="text-indigo-400 hover:text-indigo-300">
-              Sign up
-            </a>
-          </p>
-        </div>
+        <p className="mt-4 text-sm text-[#949BA4]">
+          Need an account?{' '}
+          <a href="/signup" className="text-[#00A8FC] hover:underline">
+            Register
+          </a>
+        </p>
       </div>
     </div>
   );
