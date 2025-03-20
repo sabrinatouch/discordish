@@ -47,11 +47,6 @@ const ChannelList: React.FC = () => {
         setChannels(channelData || []);
       } catch (error) {
         console.error('Error fetching data:', error);
-        // Fallback to mock data
-        const mockServer = mockServers.find(server => server.id === serverId);
-        const mockChannelList = mockChannels.filter(channel => channel.server_id === serverId);
-        setCurrentServer(mockServer || null);
-        setChannels(mockChannelList);
       } finally {
         setLoading(false);
       }

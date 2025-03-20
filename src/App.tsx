@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
@@ -9,6 +9,12 @@ import ChatView from './components/messages/ChatView';
 import UserProfile from './components/user/UserProfile';
 import Settings from './components/user/Settings';
 import DirectMessagesContainer from './components/messages/DirectMessagesContainer';
+
+// Server Redirect component to handle the redirect with parameters
+const ServerRedirect: React.FC = () => {
+  const { serverId } = useParams<{ serverId: string }>();
+  return <Navigate to={`/channels/${serverId}/general`} replace />;
+};
 
 // Protected Route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -120,6 +126,16 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <Navigate to="/channels/@me" replace />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Redirect server-only route to first channel */}
+        <Route
+          path="/channels/:serverId"
+          element={
+            <ProtectedRoute>
+              <ServerRedirect />
             </ProtectedRoute>
           }
         />

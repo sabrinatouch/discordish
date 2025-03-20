@@ -17,10 +17,16 @@ const UserProfile: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    console.log('UserProfile: Starting profile fetch...');
     const fetchProfile = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        console.log('UserProfile: Current auth user:', user?.id);
+        
+        if (!user) {
+          console.log('UserProfile: No authenticated user found');
+          return;
+        }
 
         const { data, error } = await supabase
           .from('users')
@@ -28,10 +34,15 @@ const UserProfile: React.FC = () => {
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('UserProfile: Error fetching profile:', error);
+          throw error;
+        }
+        
+        console.log('UserProfile: Successfully fetched profile:', data);
         setProfile(data);
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('UserProfile: Error in fetchProfile:', error);
         setError('Failed to load profile');
       } finally {
         setLoading(false);
@@ -41,6 +52,7 @@ const UserProfile: React.FC = () => {
     fetchProfile();
 
     // Subscribe to profile changes
+    console.log('UserProfile: Setting up profile subscription...');
     const subscription = supabase
       .channel('profile_changes')
       .on(
@@ -51,38 +63,47 @@ const UserProfile: React.FC = () => {
           table: 'users',
         },
         (payload) => {
+          console.log('UserProfile: Received profile update:', payload.new);
           setProfile(payload.new as UserProfile);
         }
       )
       .subscribe();
 
     return () => {
+      console.log('UserProfile: Cleaning up subscription');
       subscription.unsubscribe();
     };
   }, []);
 
   const handleStatusChange = async (newStatus: UserProfile['status']) => {
+    console.log('UserProfile: Attempting to update status to:', newStatus);
     try {
       const { error } = await supabase
         .from('users')
         .update({ status: newStatus })
         .eq('id', profile.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('UserProfile: Error updating status:', error);
+        throw error;
+      }
+      console.log('UserProfile: Successfully updated status');
       setProfile(prev => ({ ...prev, status: newStatus }));
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('UserProfile: Error in handleStatusChange:', error);
       setError('Failed to update status');
     }
   };
 
   const handleProfileUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    console.log('UserProfile: Starting profile update...');
     const formData = new FormData(e.currentTarget);
     const updates = {
       username: formData.get('username') as string,
       bio: formData.get('bio') as string,
     };
+    console.log('UserProfile: Update data:', updates);
 
     try {
       const { error } = await supabase
@@ -90,16 +111,21 @@ const UserProfile: React.FC = () => {
         .update(updates)
         .eq('id', profile.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('UserProfile: Error updating profile:', error);
+        throw error;
+      }
+      console.log('UserProfile: Successfully updated profile');
       setProfile(prev => ({ ...prev, ...updates }));
       setIsEditing(false);
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('UserProfile: Error in handleProfileUpdate:', error);
       setError('Failed to update profile');
     }
   };
 
   if (loading) {
+    console.log('UserProfile: Rendering loading state');
     return (
       <div className="flex items-center justify-center h-full">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
@@ -107,6 +133,7 @@ const UserProfile: React.FC = () => {
     );
   }
 
+  console.log('UserProfile: Rendering with profile:', profile);
   return (
     <div className="p-4">
       <div className="flex items-center space-x-4 mb-6">

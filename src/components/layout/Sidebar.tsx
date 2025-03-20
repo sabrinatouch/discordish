@@ -9,34 +9,56 @@ interface Server {
   icon_url: string | null;
 }
 
+interface UserProfile {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  status: 'online' | 'offline' | 'idle' | 'dnd' | 'invisible';
+  bio: string | null;
+}
+
 const Sidebar: React.FC = () => {
   const location = useLocation();
   const [servers, setServers] = useState<Server[]>([]);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchServers = async () => {
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
+        // Fetch servers
+        const { data: serverData, error: serverError } = await supabase
           .from('servers')
           .select('*')
           .order('name');
 
-        if (error) throw error;
-        setServers(data || []);
+        if (serverError) throw serverError;
+        setServers(serverData || []);
+
+        // Fetch user profile
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profileData, error: profileError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+
+          if (profileError) throw profileError;
+          setProfile(profileData);
+        }
       } catch (error) {
-        console.error('Error fetching servers:', error);
-        // Fallback to mock data
+        console.error('Error fetching data:', error);
         setServers(mockServers);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchServers();
+    fetchData();
 
     // Subscribe to server changes
-    const subscription = supabase
+    const serverSubscription = supabase
       .channel('servers')
       .on(
         'postgres_changes',
@@ -61,8 +83,25 @@ const Sidebar: React.FC = () => {
       )
       .subscribe();
 
+    // Subscribe to profile changes
+    const profileSubscription = supabase
+      .channel('profile_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users',
+        },
+        (payload) => {
+          setProfile(payload.new as UserProfile);
+        }
+      )
+      .subscribe();
+
     return () => {
-      subscription.unsubscribe();
+      serverSubscription.unsubscribe();
+      profileSubscription.unsubscribe();
     };
   }, []);
 
@@ -123,19 +162,63 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* User Settings */}
-      <div className="p-2">
-        <Link
-          to="/settings"
-          className="flex items-center w-full p-2 rounded hover:bg-gray-700 transition-colors"
-        >
-          <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      {/* User Profile Card */}
+      <div className="relative z-10 p-2">
+        <div className="bg-gray-800 rounded-lg shadow-lg p-2">
+          <Link
+            to="/profile"
+            className="flex items-center space-x-3 mb-2 p-2 rounded hover:bg-gray-700 transition-colors"
+          >
+            <div className="relative">
+              <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt={profile.username}
+                    className="w-full h-full rounded-full"
+                  />
+                ) : (
+                  <span className="text-sm text-white">
+                    {profile?.username?.charAt(0).toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div
+                className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-gray-800 ${
+                  profile?.status === 'online'
+                    ? 'bg-green-500'
+                    : profile?.status === 'idle'
+                    ? 'bg-yellow-500'
+                    : profile?.status === 'dnd'
+                    ? 'bg-red-500'
+                    : profile?.status === 'invisible'
+                    ? 'bg-gray-400'
+                    : 'bg-gray-500'
+                }`}
+              />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-white truncate">
+                {profile?.username}
+              </p>
+              <p className="text-xs text-gray-400 capitalize">
+                {profile?.status}
+              </p>
+            </div>
+          </Link>
+
+          {/* User Settings Button */}
+          <Link
+            to="/settings"
+            className="flex items-center w-full p-2 rounded hover:bg-gray-700 transition-colors"
+          >
+            <svg className="w-4 h-4 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-          </div>
-          <span className="ml-3 text-sm text-gray-300">User Settings</span>
-        </Link>
+            <span className="text-sm text-gray-300">User Settings</span>
+          </Link>
+        </div>
       </div>
     </div>
   );
