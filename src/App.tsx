@@ -8,6 +8,7 @@ import ChannelList from './components/layout/ChannelList';
 import ChatView from './components/messages/ChatView';
 import UserProfile from './components/user/UserProfile';
 import Settings from './components/user/Settings';
+import DirectMessagesContainer from './components/messages/DirectMessagesContainer';
 
 // Protected Route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -77,9 +78,7 @@ const App: React.FC = () => {
             <ProtectedRoute>
               <div className="flex h-screen">
                 <Sidebar />
-                <div className="flex-1 bg-gray-700 flex items-center justify-center">
-                  <h1 className="text-white text-2xl">Welcome to your DMs!</h1>
-                </div>
+                <DirectMessagesContainer />
               </div>
             </ProtectedRoute>
           }
