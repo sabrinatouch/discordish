@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { messageService } from '../../services/messages';
 import { authService } from '../../services/auth';
 import { subscriptionService } from '../../services/subscription';

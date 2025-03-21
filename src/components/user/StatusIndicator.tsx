@@ -13,7 +13,6 @@ interface StatusIndicatorProps {
 const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   status,
   showLabel = true,
-  size = 'small',
   className = '',
   statusClassName = '',
 }) => {

@@ -4,18 +4,6 @@ import { serverMemberService } from '../../services/serverMembers';
 import { userService, UserProfile } from '../../services/users';
 import UserAvatar from '../user/UserAvatar';
 
-interface User {
-  id: string;
-  username: string;
-  avatar_url: string | null;
-  status: 'online' | 'offline' | 'idle' | 'dnd' | 'invisible';
-}
-
-interface UserListProps {
-    onSelectUser: (user: User) => void;
-    selectedUserId?: string;
-}
-
 const UserList: React.FC = () => {
   const [members, setMembers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);

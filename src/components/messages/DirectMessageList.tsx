@@ -20,7 +20,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
 }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  //const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
         
         console.log('Current user:', user);
         if (user) {
-          setCurrentUserId(user.id);
+          //setCurrentUserId(user.id);
           await loadUsers(user.id);
         }
       } catch (error) {
