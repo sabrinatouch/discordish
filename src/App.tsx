@@ -11,6 +11,7 @@ import UserProfile from './components/user/UserProfile';
 import Settings from './components/user/Settings';
 import DirectMessagesContainer from './components/messages/DirectMessagesContainer';
 import { channelService } from './services/channels';
+import StatusTest from './components/user/StatusTest';
 
 // Component to handle server redirect with proper URL parameters
 const ServerChannelRedirect: React.FC = () => {
@@ -121,80 +122,35 @@ const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-
-        {/* Protected Routes */}
-        <Route
-          path="/channels/:serverId/:channelId"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <ChannelList />
-                <ChatView />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/channels/@me"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <DirectMessagesContainer />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* User Profile Route */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <div className="flex-1 bg-gray-700">
-                  <UserProfile />
-                </div>
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Settings Route */}
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <div className="flex-1 bg-gray-700">
-                  <Settings />
-                </div>
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Redirect root to login or home */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/channels/@me" replace />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Redirect server-only route to first channel */}
-        <Route
-          path="/channels/:serverId"
-          element={
-            <ProtectedRoute>
-              <ServerChannelRedirect />
-            </ProtectedRoute>
-          }
-        />
+        
+        {/* Status test route */}
+        <Route path="/status-test" element={<StatusTest />} />
+        
+        <Route path="/" element={<ProtectedRoute><AppLayout><Outlet /></AppLayout></ProtectedRoute>}>
+          {/* Redirect root to channel list */}
+          <Route path="" element={<Navigate to="/channels/@me" replace />} />
+          
+          {/* Direct messages routes */}
+          <Route path="channels/@me" element={<DirectMessagesContainer />} />
+          
+          {/* User profile and settings */}
+          <Route path="profile" element={<UserProfile />} />
+          <Route path="settings" element={<Settings />} />
+          
+          {/* Server and channel routes */}
+          <Route path="channels/:serverId" element={<ServerChannelRedirect />} />
+          <Route path="channels/:serverId/:channelId" element={
+            <div className="flex flex-1 h-full">
+              <ChannelList />
+              <ChatView />
+            </div>
+          } />
+        </Route>
+        
+        {/* Catch all route */}
+        <Route path="*" element={<Navigate to="/channels/@me" replace />} />
       </Routes>
     </Router>
   );

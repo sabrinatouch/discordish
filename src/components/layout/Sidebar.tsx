@@ -6,6 +6,8 @@ import { serverService } from '../../services/servers';
 import { userService } from '../../services/users';
 import { authService } from '../../services/auth';
 import { UserProfile as AuthUserProfile } from '../../services/auth';
+import UserAvatar from '../user/UserAvatar';
+import StatusIndicator from '../user/StatusIndicator';
 
 interface Server {
   id: string;
@@ -185,41 +187,22 @@ const Sidebar: React.FC = () => {
             to="/profile"
             className="flex items-center space-x-3 mb-2 p-2 rounded hover:bg-gray-700 transition-colors"
           >
-            <div className="relative">
-              <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.username}
-                    className="w-full h-full rounded-full"
-                  />
-                ) : (
-                  <span className="text-sm text-white">
-                    {profile?.username?.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <div
-                className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-gray-800 ${
-                  profile?.status === 'online'
-                    ? 'bg-green-500'
-                    : profile?.status === 'idle'
-                    ? 'bg-yellow-500'
-                    : profile?.status === 'dnd'
-                    ? 'bg-red-500'
-                    : profile?.status === 'invisible'
-                    ? 'bg-gray-400'
-                    : 'bg-gray-500'
-                }`}
-              />
-            </div>
+            <UserAvatar 
+              username={profile?.username || 'User'} 
+              avatarUrl={profile?.avatar_url || null} 
+              status={profile?.status || 'offline'} 
+              size="small"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
                 {profile?.username}
               </p>
-              <p className="text-xs text-gray-400 capitalize">
-                {profile?.status}
-              </p>
+              <div className="flex items-center">
+                <StatusIndicator status={profile?.status || 'offline'} size="small" showLabel={false} />
+                <span className="ml-1 text-xs text-gray-400 capitalize">
+                  {profile?.status}
+                </span>
+              </div>
             </div>
           </Link>
 

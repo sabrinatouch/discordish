@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { directMessageService, DirectMessage } from '../../services/directMessages';
 import { supabase } from '../../lib/supabase';
+import UserAvatar from '../user/UserAvatar';
+import StatusIndicator from '../user/StatusIndicator';
 
 interface DirectMessageViewProps {
   otherUserId: string;
@@ -100,17 +102,15 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
       {/* Header */}
       <div className="flex items-center p-4 border-b border-gray-700">
         <div className="flex items-center space-x-3">
-          <div className="relative">
-            <img
-              src={otherUserAvatar || 'https://i.pravatar.cc/150?img=1'}
-              alt={otherUsername}
-              className="w-10 h-10 rounded-full"
-            />
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-gray-900"></div>
-          </div>
+          <UserAvatar
+            username={otherUsername}
+            avatarUrl={otherUserAvatar || null}
+            status="online"
+            size="medium"
+          />
           <div>
             <h2 className="text-lg font-semibold text-white">{otherUsername}</h2>
-            <p className="text-sm text-gray-400">Online</p>
+            <StatusIndicator status="online" size="small" />
           </div>
         </div>
       </div>

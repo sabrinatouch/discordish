@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import UserAvatar from './UserAvatar';
+import StatusIndicator from './StatusIndicator';
+import UserStatus from './UserStatus';
 
 interface UserProfile {
   id: string;
@@ -142,34 +145,12 @@ const UserProfile: React.FC = () => {
   return (
     <div className="p-4">
       <div className="flex items-center space-x-4 mb-6">
-        <div className="relative">
-          <div className="w-20 h-20 rounded-full bg-gray-600 flex items-center justify-center">
-            {profile.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt={profile.username}
-                className="w-full h-full rounded-full"
-              />
-            ) : (
-              <span className="text-2xl text-white">
-                {profile.username.charAt(0).toUpperCase()}
-              </span>
-            )}
-          </div>
-          <div
-            className={`absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-gray-800 ${
-              profile.status === 'online'
-                ? 'bg-green-500'
-                : profile.status === 'idle'
-                ? 'bg-yellow-500'
-                : profile.status === 'dnd'
-                ? 'bg-red-500'
-                : profile.status === 'invisible'
-                ? 'bg-gray-400'
-                : 'bg-gray-500'
-            }`}
-          />
-        </div>
+        <UserAvatar 
+          username={profile.username}
+          avatarUrl={profile.avatar_url}
+          status={profile.status}
+          size="large"
+        />
         <div>
           <h2 className="text-xl font-semibold text-white">{profile.username}</h2>
           <p className="text-gray-400 capitalize">{profile.status}</p>
@@ -225,20 +206,39 @@ const UserProfile: React.FC = () => {
         <>
           <div className="mb-6">
             <h3 className="text-lg font-medium text-white mb-2">Status</h3>
-            <div className="flex space-x-2">
-              {(['online', 'idle', 'dnd', 'offline', 'invisible'] as const).map((status) => (
-                <button
-                  key={status}
-                  onClick={() => handleStatusChange(status)}
-                  className={`px-3 py-1 rounded capitalize ${
-                    profile.status === status
-                      ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  {status}
-                </button>
-              ))}
+            <div className="mb-3">
+              <StatusIndicator status={profile.status} size="medium" />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {(['online', 'idle', 'dnd', 'offline', 'invisible'] as const).map((status) => {
+                // Get status color style
+                const getStatusStyle = () => {
+                  switch (status) {
+                    case 'online': return { borderColor: '#43b581' };
+                    case 'idle': return { borderColor: '#faa61a' };
+                    case 'dnd': return { borderColor: '#f04747' };
+                    case 'invisible':
+                    case 'offline':
+                    default: return { borderColor: '#747f8d' };
+                  }
+                };
+                
+                return (
+                  <button
+                    key={status}
+                    onClick={() => handleStatusChange(status)}
+                    className={`px-3 py-1 rounded-md flex items-center space-x-2 ${
+                      profile.status === status
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    } border-2`}
+                    style={getStatusStyle()}
+                  >
+                    <UserStatus status={status} size="small" showBorder={false} />
+                    <span className="capitalize">{status}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 

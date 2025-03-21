@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { messageService } from '../../services/messages';
 import { authService } from '../../services/auth';
 import { subscriptionService } from '../../services/subscription';
+import UserAvatar from '../user/UserAvatar';
 
 interface Message {
   id: string;
@@ -106,19 +107,12 @@ const ChatView: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div key={message.id} className="flex items-start space-x-3">
-            <div className="w-10 h-10 rounded-full bg-gray-600 flex-shrink-0">
-              {message.user.avatar_url ? (
-                <img
-                  src={message.user.avatar_url}
-                  alt={message.user.username}
-                  className="w-full h-full rounded-full"
-                />
-              ) : (
-                <div className="w-full h-full rounded-full flex items-center justify-center text-white">
-                  {message.user.username.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
+            <UserAvatar 
+              username={message.user.username}
+              avatarUrl={message.user.avatar_url}
+              size="medium"
+              showStatus={false}
+            />
             <div className="flex-1">
               <div className="flex items-center space-x-2">
                 <span className="text-white font-semibold">{message.user.username}</span>
