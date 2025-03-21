@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
-import { mockUsers } from '../../lib/mockData';
 
 interface UserProfile {
   id: string;
@@ -11,7 +10,13 @@ interface UserProfile {
 }
 
 const UserProfile: React.FC = () => {
-  const [profile, setProfile] = useState<UserProfile>(mockUsers[0]);
+  const [profile, setProfile] = useState<UserProfile>({
+    id: '',
+    username: 'User',
+    avatar_url: null,
+    status: 'offline',
+    bio: null
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

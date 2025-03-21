@@ -20,27 +20,16 @@ const ServerChannelRedirect: React.FC = () => {
   React.useEffect(() => {
     const fetchAndRedirect = async () => {
       try {
-        // Fetch channels for the server
-        const { data: channels, error: channelError } = await supabase
-          .from('channels')
-          .select('id, name')
-          .eq('server_id', serverId)
-          .order('created_at')
-          .limit(1);
+        // Use the channel service to fetch the first channel
+        const firstChannel = await channelService.getFirstChannelForServer(serverId!);
           
-        if (channelError) {
-          console.error('Error fetching channels:', channelError);
-          setError('Error loading channels');
-          return;
-        }
-        
-        if (!channels || channels.length === 0) {
+        if (!firstChannel) {
           setError('No channels found in this server');
           return;
         }
         
         // Navigate to the first channel
-        navigate(`/channels/${serverId}/${channels[0].id}`, { replace: true });
+        navigate(`/channels/${serverId}/${firstChannel.id}`, { replace: true });
       } catch (error) {
         console.error('Error in channel redirect:', error);
         setError('Error loading server');

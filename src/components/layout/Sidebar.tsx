@@ -27,17 +27,12 @@ const Sidebar: React.FC = () => {
   // Handle server click to navigate to the first channel
   const handleServerClick = async (serverId: string) => {
     try {
-      // Fetch the first channel in this server
-      const { data: channels } = await supabase
-        .from('channels')
-        .select('id')
-        .eq('server_id', serverId)
-        .order('created_at')
-        .limit(1);
+      // Use the channel service to fetch the first channel
+      const firstChannel = await channelService.getFirstChannelForServer(serverId);
       
-      if (channels && channels.length > 0) {
+      if (firstChannel) {
         // Navigate directly to the first channel
-        navigate(`/channels/${serverId}/${channels[0].id}`);
+        navigate(`/channels/${serverId}/${firstChannel.id}`);
       } else {
         // Fall back to server route if no channels
         navigate(`/channels/${serverId}`);

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { mockChannels, mockServers } from '../../lib/mockData';
 
 interface Channel {
   id: string;

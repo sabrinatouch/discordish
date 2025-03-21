@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { mockMessages } from '../../lib/mockData';
 
 interface Message {
   id: string;
@@ -46,9 +45,7 @@ const ChatView: React.FC = () => {
         setMessages(data || []);
       } catch (error) {
         console.error('Error fetching messages:', error);
-        // Fallback to mock data
-        const channelMessages = mockMessages.filter(msg => msg.channel_id === channelId);
-        setMessages(channelMessages);
+        setMessages([]);
       } finally {
         setLoading(false);
       }
@@ -106,19 +103,7 @@ const ChatView: React.FC = () => {
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
-      // Fallback to mock data
-      const newMsg: Message = {
-        id: Date.now().toString(),
-        content: newMessage.trim(),
-        user_id: '1',
-        channel_id: channelId,
-        created_at: new Date().toISOString(),
-        user: {
-          username: 'John Doe',
-          avatar_url: 'https://i.pravatar.cc/150?img=1',
-        },
-      };
-      setMessages(prev => [...prev, newMsg]);
+      // Clear the message input despite the error
       setNewMessage('');
     }
   };
