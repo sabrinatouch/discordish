@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { channelService } from '../../services/channels';
+import { serverService } from '../../services/servers';
+import { userService } from '../../services/users';
+import { authService } from '../../services/auth';
+import { subscriptionService } from '../../services/subscription';
+import UserAvatar from '../user/UserAvatar';
+import { supabase } from '../../lib/supabase';
 
 interface Server {
   id: string;
@@ -27,17 +32,12 @@ const Sidebar: React.FC = () => {
   // Handle server click to navigate to the first channel
   const handleServerClick = async (serverId: string) => {
     try {
-      // Fetch the first channel in this server
-      const { data: channels } = await supabase
-        .from('channels')
-        .select('id')
-        .eq('server_id', serverId)
-        .order('created_at')
-        .limit(1);
+      // Use the channel service to fetch the first channel
+      const firstChannel = await channelService.getFirstChannelForServer(serverId);
       
-      if (channels && channels.length > 0) {
+      if (firstChannel) {
         // Navigate directly to the first channel
-        navigate(`/channels/${serverId}/${channels[0].id}`);
+        navigate(`/channels/${serverId}/${firstChannel.id}`);
       } else {
         // Fall back to server route if no channels
         navigate(`/channels/${serverId}`);
@@ -52,26 +52,20 @@ const Sidebar: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch servers
-        const { data: serverData, error: serverError } = await supabase
-          .from('servers')
-          .select('*')
-          .order('name');
-
-        if (serverError) throw serverError;
+        // Fetch user auth info first
+        const currentAuthUser = await authService.getCurrentUser();
+        if (!currentAuthUser) return;
+        console.log('Fetched auth userId', currentAuthUser.username);
+        
+        // Fetch servers using serverService
+        const serverData = await serverService.getAllServersMemberOf(currentAuthUser.id);
         setServers(serverData || []);
+        console.log('Fetched servers for auth user', serverData);
 
-        // Fetch user profile
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-          if (profileError) throw profileError;
-          setProfile(profileData);
+        // Get the full user profile from userService for additional fields
+        const userProfile = await userService.getUserProfile(currentAuthUser.id);
+        if (userProfile) {
+          setProfile(userProfile as UserProfile);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -82,33 +76,29 @@ const Sidebar: React.FC = () => {
 
     fetchData();
 
-    // Subscribe to server changes
-    const serverSubscription = supabase
-      .channel('servers')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'servers',
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setServers(prev => [...prev, payload.new as Server]);
-          } else if (payload.eventType === 'DELETE') {
-            setServers(prev => prev.filter(server => server.id !== payload.old.id));
-          } else if (payload.eventType === 'UPDATE') {
-            setServers(prev =>
-              prev.map(server =>
-                server.id === payload.new.id ? (payload.new as Server) : server
-              )
-            );
-          }
-        }
-      )
-      .subscribe();
+    // Subscribe to server changes using the subscription service
+    const serverSubscription = subscriptionService.subscribeToServers<Server>((payload) => {
+      if (payload.eventType === 'INSERT') {
+        setServers(prev => [...prev, payload.new as Server]);
+      } else if (payload.eventType === 'DELETE') {
+        setServers(prev => prev.filter(server => server.id !== payload.old.id));
+      } else if (payload.eventType === 'UPDATE') {
+        setServers(prev =>
+          prev.map(server =>
+            server.id === payload.new.id ? (payload.new as Server) : server
+          )
+        );
+      }
+    });
 
     // Subscribe to profile changes
+    // const profileSubscription = subscriptionService.subscribeToUserChanges<UserProfile>((payload) => {
+    //   console.log("profileSubscription detected");
+    //   setProfile(payload.new as UserProfile);
+    // });
+
+    // Subscribe to profile changes
+    console.log('Sidebar.tsx: Setting up profile subscription...');
     const profileSubscription = supabase
       .channel('profile_changes')
       .on(
@@ -119,13 +109,14 @@ const Sidebar: React.FC = () => {
           table: 'users',
         },
         (payload) => {
+          console.log('Sidebar.tsx: Received profile update:', payload.new);
           setProfile(payload.new as UserProfile);
         }
       )
       .subscribe();
 
     return () => {
-      serverSubscription.unsubscribe();
+      serverSubscription();
       profileSubscription.unsubscribe();
     };
   }, []);
@@ -146,11 +137,11 @@ const Sidebar: React.FC = () => {
           {/* Home Button */}
           <Link
             to="/channels/@me"
-            className={`flex items-center justify-center w-12 h-12 rounded-full hover:rounded-2xl transition-all duration-200 ${
+            className={`flex items-center justify-center w-10 h-10 rounded-xl hover:rounded-2xl transition-all duration-200 ${
               location.pathname === '/channels/@me' ? 'bg-indigo-600' : 'bg-gray-800 hover:bg-gray-700'
             }`}
           >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="text-white w-40 h-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
           </Link>
@@ -168,7 +159,9 @@ const Sidebar: React.FC = () => {
                 <img
                   src={server.icon_url}
                   alt={server.name}
-                  className="w-8 h-8 rounded-full"
+                  width={'40px'}
+                  height={'40px'}
+                  className="rounded-xl"
                 />
               ) : (
                 <span className="text-white text-lg font-semibold">
@@ -194,41 +187,21 @@ const Sidebar: React.FC = () => {
             to="/profile"
             className="flex items-center space-x-3 mb-2 p-2 rounded hover:bg-gray-700 transition-colors"
           >
-            <div className="relative">
-              <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt={profile.username}
-                    className="w-full h-full rounded-full"
-                  />
-                ) : (
-                  <span className="text-sm text-white">
-                    {profile?.username?.charAt(0).toUpperCase()}
-                  </span>
-                )}
-              </div>
-              <div
-                className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-gray-800 ${
-                  profile?.status === 'online'
-                    ? 'bg-green-500'
-                    : profile?.status === 'idle'
-                    ? 'bg-yellow-500'
-                    : profile?.status === 'dnd'
-                    ? 'bg-red-500'
-                    : profile?.status === 'invisible'
-                    ? 'bg-gray-400'
-                    : 'bg-gray-500'
-                }`}
-              />
-            </div>
+            <UserAvatar 
+              username={profile?.username || 'User'} 
+              avatarUrl={profile?.avatar_url || null} 
+              status={profile?.status || 'offline'} 
+              size="small"
+            />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">
                 {profile?.username}
               </p>
-              <p className="text-xs text-gray-400 capitalize">
-                {profile?.status}
-              </p>
+              <div className="flex items-center">
+                <span className="ml-1 text-xs text-gray-400 capitalize">
+                  {profile?.status}
+                </span>
+              </div>
             </div>
           </Link>
 

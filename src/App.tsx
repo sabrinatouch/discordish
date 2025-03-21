@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams, Outlet, useNavigate } from 'react-router-dom';
-import { supabase } from './lib/supabase';
+import { authService } from './services/auth';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
 import Sidebar from './components/layout/Sidebar';
@@ -9,7 +9,9 @@ import ChatView from './components/messages/ChatView';
 import UserProfile from './components/user/UserProfile';
 import Settings from './components/user/Settings';
 import DirectMessagesContainer from './components/messages/DirectMessagesContainer';
+import UserList from './components/server/UserList'
 import { channelService } from './services/channels';
+import StatusTest from './components/user/StatusTest';
 
 // Component to handle server redirect with proper URL parameters
 const ServerChannelRedirect: React.FC = () => {
@@ -20,27 +22,16 @@ const ServerChannelRedirect: React.FC = () => {
   React.useEffect(() => {
     const fetchAndRedirect = async () => {
       try {
-        // Fetch channels for the server
-        const { data: channels, error: channelError } = await supabase
-          .from('channels')
-          .select('id, name')
-          .eq('server_id', serverId)
-          .order('created_at')
-          .limit(1);
+        // Use the channel service to fetch the first channel
+        const firstChannel = await channelService.getFirstChannelForServer(serverId!);
           
-        if (channelError) {
-          console.error('Error fetching channels:', channelError);
-          setError('Error loading channels');
-          return;
-        }
-        
-        if (!channels || channels.length === 0) {
+        if (!firstChannel) {
           setError('No channels found in this server');
           return;
         }
         
         // Navigate to the first channel
-        navigate(`/channels/${serverId}/${channels[0].id}`, { replace: true });
+        navigate(`/channels/${serverId}/${firstChannel.id}`, { replace: true });
       } catch (error) {
         console.error('Error in channel redirect:', error);
         setError('Error loading server');
@@ -83,8 +74,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   React.useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
+        const authUser = await authService.getCurrentUser();
+        setUser(authUser);
       } catch (error) {
         console.error('Error checking user:', error);
       } finally {
@@ -94,11 +85,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    // Set up auth state change listener
+    const unsubscribe = authService.onAuthStateChange((authUser) => {
+      setUser(authUser);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   if (loading) {
@@ -128,80 +122,36 @@ const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-
-        {/* Protected Routes */}
-        <Route
-          path="/channels/:serverId/:channelId"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <ChannelList />
-                <ChatView />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/channels/@me"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <DirectMessagesContainer />
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* User Profile Route */}
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <div className="flex-1 bg-gray-700">
-                  <UserProfile />
-                </div>
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Settings Route */}
-        <Route
-          path="/settings"
-          element={
-            <ProtectedRoute>
-              <AppLayout>
-                <div className="flex-1 bg-gray-700">
-                  <Settings />
-                </div>
-              </AppLayout>
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Redirect root to login or home */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Navigate to="/channels/@me" replace />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* Redirect server-only route to first channel */}
-        <Route
-          path="/channels/:serverId"
-          element={
-            <ProtectedRoute>
-              <ServerChannelRedirect />
-            </ProtectedRoute>
-          }
-        />
+        
+        {/* Status test route */}
+        <Route path="/status-test" element={<StatusTest />} />
+        
+        <Route path="/" element={<ProtectedRoute><AppLayout><Outlet /></AppLayout></ProtectedRoute>}>
+          {/* Redirect root to channel list */}
+          <Route path="" element={<Navigate to="/channels/@me" replace />} />
+          
+          {/* Direct messages routes */}
+          <Route path="channels/@me" element={<DirectMessagesContainer />} />
+          
+          {/* User profile and settings */}
+          <Route path="profile" element={<UserProfile />} />
+          <Route path="settings" element={<Settings />} />
+          
+          {/* Server and channel routes */}
+          <Route path="channels/:serverId" element={<ServerChannelRedirect />} />
+          <Route path="channels/:serverId/:channelId" element={
+            <div className="flex flex-1 h-full">
+              <ChannelList />
+              <ChatView />
+              <UserList />
+            </div>
+          } />
+        </Route>
+        
+        {/* Catch all route */}
+        <Route path="*" element={<Navigate to="/channels/@me" replace />} />
       </Routes>
     </Router>
   );

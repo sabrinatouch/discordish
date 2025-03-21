@@ -33,6 +33,7 @@ const DirectMessagesContainer: React.FC = () => {
             otherUserId={selectedUser.id}
             otherUsername={selectedUser.username}
             otherUserAvatar={selectedUser.avatar_url}
+            otherUserStatus={selectedUser.status}
           />
         ) : (
           <div className="flex items-center justify-center h-full text-gray-400">

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { mockChannels, mockServers } from '../../lib/mockData';
+import { channelService } from '../../services/channels';
+import { serverService } from '../../services/servers';
 
 interface Channel {
   id: string;
@@ -26,24 +27,12 @@ const ChannelList: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch server data
-        const { data: serverData, error: serverError } = await supabase
-          .from('servers')
-          .select('*')
-          .eq('id', serverId)
-          .single();
-
-        if (serverError) throw serverError;
+        // Fetch server data using serverService
+        const serverData = await serverService.getServer(serverId!);
         setCurrentServer(serverData);
 
-        // Fetch channels
-        const { data: channelData, error: channelError } = await supabase
-          .from('channels')
-          .select('*')
-          .eq('server_id', serverId)
-          .order('name');
-
-        if (channelError) throw channelError;
+        // Fetch channels using channelService
+        const channelData = await channelService.getServerChannels(serverId!);
         setChannels(channelData || []);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -109,6 +98,16 @@ const ChannelList: React.FC = () => {
         <h2 className="text-white font-semibold">{currentServer.name}</h2>
       </div>
 
+      {/* Add Channel Button */}
+      <div className="p-2">
+        <button className="w-full flex items-center px-2 py-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Channel
+        </button>
+      </div>
+      
       {/* Channel List */}
       <div className="flex-1 overflow-y-auto p-2">
         <div className="space-y-1">
@@ -127,15 +126,6 @@ const ChannelList: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Channel Button */}
-      <div className="p-2">
-        <button className="w-full flex items-center px-2 py-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Channel
-        </button>
-      </div>
     </div>
   );
 };

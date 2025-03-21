@@ -1,12 +1,64 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-*, *::before, *::after {
+/* Add this custom styles section for our status indicators */
+@layer utilities {
+  .bg-discord-success {
+    background-color: #43b581 !important;
+  }
+  
+  .bg-discord-danger {
+    background-color: #f04747 !important;
+  }
+  
+  .bg-discord-warning {
+    background-color: #faa61a !important;
+  }
+  
+  .bg-discord-muted {
+    background-color: #747f8d !important;
+  }
+  
+  .text-discord-success {
+    color: #43b581 !important;
+  }
+  
+  .text-discord-danger {
+    color: #f04747 !important;
+  }
+  
+  .text-discord-warning {
+    color: #faa61a !important;
+  }
+  
+  .text-discord-muted {
+    color: #747f8d !important;
+  }
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: sans-serif;
+    /* color: #333; */
+  }
+}
+
+/* Instead of this (v) do this (^) */
+
+/* *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-}
+} */
 
 :root {
   font-family: 'gg sans', system-ui, Avenir, Helvetica, Arial, sans-serif;

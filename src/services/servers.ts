@@ -1,66 +1,25 @@
 import { supabase } from '../lib/supabase';
 import { handleSupabaseError } from '../lib/supabase';
 
-export interface CreateServerData {
+export interface Server {
+  id: string;
   name: string;
-  description: string;
-  icon_url: string;
+  icon_url: string | null;
   owner_id: string;
+  created_at: string;
 }
 
-export interface UpdateServerData {
-  name?: string;
-  description?: string;
+export interface ServerData {
+  name: string;
   icon_url?: string;
 }
 
 export const serverService = {
-  async createServer(serverData: CreateServerData) {
-    try {
-      const { data, error } = await supabase
-        .from('servers')
-        .insert([serverData])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Create server member record for the owner
-      const { error: memberError } = await supabase
-        .from('server_members')
-        .insert([
-          {
-            server_id: data.id,
-            user_id: serverData.owner_id,
-            role: 'owner',
-          },
-        ]);
-
-      if (memberError) throw memberError;
-
-      return data;
-    } catch (error) {
-      handleSupabaseError(error);
-    }
-  },
-
   async getServer(serverId: string) {
     try {
       const { data, error } = await supabase
         .from('servers')
-        .select(`
-          *,
-          server_members (
-            user_id,
-            role,
-            users (
-              id,
-              username,
-              avatar_url,
-              status
-            )
-          )
-        `)
+        .select('*')
         .eq('id', serverId)
         .single();
 
@@ -68,50 +27,91 @@ export const serverService = {
       return data;
     } catch (error) {
       handleSupabaseError(error);
+      return null;
+    }
+  },
+
+  // Gets only servers user is owner of
+  async getUserServers(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('servers')
+        .select('*')
+        .eq('owner_id', userId)
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      handleSupabaseError(error);
+      return [];
+    }
+  },
+
+  async getAllServersMemberOf(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('servers')
+        .select('*, server_members(*)') // Assuming server_members is the table that links users to servers
+        .eq('server_members.user_id', userId) // Filter by user ID in the server_members table
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      handleSupabaseError(error);
+      return [];
+    }
+  },
+
+  async createServer(serverData: ServerData, userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('servers')
+        .insert([{
+          ...serverData,
+          owner_id: userId
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      handleSupabaseError(error);
+      return null;
+    }
+  },
+
+  async updateServer(serverId: string, serverData: Partial<ServerData>) {
+    try {
+      const { data, error } = await supabase
+        .from('servers')
+        .update(serverData)
+        .eq('id', serverId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      handleSupabaseError(error);
+      return null;
     }
   },
 
   async deleteServer(serverId: string) {
     try {
-      // Delete server members first
-      const { error: memberError } = await supabase
-        .from('server_members')
-        .delete()
-        .eq('server_id', serverId);
-
-      if (memberError) throw memberError;
-
-      // Delete server
-      const { error: serverError } = await supabase
+      const { error } = await supabase
         .from('servers')
         .delete()
         .eq('id', serverId);
 
-      if (serverError) throw serverError;
-    } catch (error) {
-      handleSupabaseError(error);
-    }
-  },
-
-  async getUserServers(userId: string) {
-    try {
-      const { data, error } = await supabase
-        .from('server_members')
-        .select(`
-          servers (
-            id,
-            name,
-            description,
-            icon_url,
-            created_at
-          )
-        `)
-        .eq('user_id', userId);
-
       if (error) throw error;
-      return data.map(member => member.servers);
+      return true;
     } catch (error) {
       handleSupabaseError(error);
+      return false;
     }
-  },
+  }
 }; 

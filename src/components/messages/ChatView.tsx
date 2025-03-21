@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { mockMessages } from '../../lib/mockData';
+import { messageService } from '../../services/messages';
+import { authService } from '../../services/auth';
+import { subscriptionService } from '../../services/subscription';
+import UserAvatar from '../user/UserAvatar';
 
 interface Message {
   id: string;
@@ -33,22 +36,13 @@ const ChatView: React.FC = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const { data, error } = await supabase
-          .from('messages')
-          .select(`
-            *,
-            user:users(username, avatar_url)
-          `)
-          .eq('channel_id', channelId)
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
+        if (!channelId) return;
+        
+        const data = await messageService.getChatMessages(channelId);
         setMessages(data || []);
       } catch (error) {
         console.error('Error fetching messages:', error);
-        // Fallback to mock data
-        const channelMessages = mockMessages.filter(msg => msg.channel_id === channelId);
-        setMessages(channelMessages);
+        setMessages([]);
       } finally {
         setLoading(false);
       }
@@ -56,25 +50,19 @@ const ChatView: React.FC = () => {
 
     fetchMessages();
 
-    // Subscribe to new messages
-    const subscription = supabase
-      .channel(`messages:${channelId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `channel_id=eq.${channelId}`,
-        },
+    // Subscribe to new messages using subscriptionService
+    const unsubscribe = channelId ? 
+      subscriptionService.subscribeToMessages<Message>(
+        channelId,
         (payload) => {
-          setMessages(prev => [...prev, payload.new as Message]);
+          if (payload.eventType === 'INSERT') {
+            setMessages(prev => [...prev, payload.new]);
+          }
         }
-      )
-      .subscribe();
+      ) : () => {};
 
     return () => {
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [channelId]);
 
@@ -83,42 +71,24 @@ const ChatView: React.FC = () => {
     if (!newMessage.trim() || !channelId) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      // Get current user from authService
+      const currentUser = await authService.getCurrentUser();
+      if (!currentUser) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase
-        .from('messages')
-        .insert([
-          {
-            content: newMessage.trim(),
-            user_id: user.id,
-            channel_id: channelId,
-          },
-        ])
-        .select(`
-          *,
-          user:users(username, avatar_url)
-        `)
-        .single();
+      const messageData = {
+        content: newMessage.trim(),
+        user_id: currentUser.id,
+        channel_id: channelId,
+      };
 
-      if (error) throw error;
-      setMessages(prev => [...prev, data]);
+      const data = await messageService.sendMessage(messageData);
+      if (data) {
+        setMessages(prev => [...prev, data]);
+      }
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
-      // Fallback to mock data
-      const newMsg: Message = {
-        id: Date.now().toString(),
-        content: newMessage.trim(),
-        user_id: '1',
-        channel_id: channelId,
-        created_at: new Date().toISOString(),
-        user: {
-          username: 'John Doe',
-          avatar_url: 'https://i.pravatar.cc/150?img=1',
-        },
-      };
-      setMessages(prev => [...prev, newMsg]);
+      // Clear the message input despite the error
       setNewMessage('');
     }
   };
@@ -137,19 +107,12 @@ const ChatView: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
           <div key={message.id} className="flex items-start space-x-3">
-            <div className="w-10 h-10 rounded-full bg-gray-600 flex-shrink-0">
-              {message.user.avatar_url ? (
-                <img
-                  src={message.user.avatar_url}
-                  alt={message.user.username}
-                  className="w-full h-full rounded-full"
-                />
-              ) : (
-                <div className="w-full h-full rounded-full flex items-center justify-center text-white">
-                  {message.user.username.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
+            <UserAvatar 
+              username={message.user.username}
+              avatarUrl={message.user.avatar_url}
+              size="medium"
+              showStatus={false}
+            />
             <div className="flex-1">
               <div className="flex items-center space-x-2">
                 <span className="text-white font-semibold">{message.user.username}</span>

@@ -120,4 +120,25 @@ export const channelService = {
       handleSupabaseError(error);
     }
   },
+
+  async getFirstChannelForServer(serverId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('channels')
+        .select('id, name')
+        .eq('server_id', serverId)
+        .order('created_at')
+        .limit(1);
+        
+      if (error) {
+        console.error('Error fetching first channel:', error);
+        throw error;
+      }
+      
+      return data?.[0] || null;
+    } catch (error) {
+      handleSupabaseError(error);
+      return null;
+    }
+  },
 }; 
