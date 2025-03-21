@@ -60,10 +60,9 @@ const UserList: React.FC = () => {
             members.map((member) => (
               <button
                 key={member.id}
-                className={`w-full flex items-center space-x-3 p-2 rounded-lg transition-colors
-                    ? 'bg-gray-700'
-                    : 'hover:bg-gray-800'
-                }`}
+                className={`w-full flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-800 transition-colors
+                    ${member.status === 'offline' || member.status === 'invisible' ? 'opacity-25' : ''} 
+                `}
               >
                 <div className="relative">
                     <UserAvatar
@@ -75,7 +74,7 @@ const UserList: React.FC = () => {
                     />
                 </div>
                 <div className="flex-1 text-left">
-                  <p className="text-white font-medium">{member.username}</p>
+                    <p className="text-white font-medium">{member.username}</p>
                 </div>
               </button>
             ))

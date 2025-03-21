@@ -31,6 +31,7 @@ export const serverService = {
     }
   },
 
+  // Gets only servers user is owner of
   async getUserServers(userId: string) {
     try {
       const { data, error } = await supabase

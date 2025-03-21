@@ -6,6 +6,7 @@ import { userService } from '../../services/users';
 import { authService } from '../../services/auth';
 import { subscriptionService } from '../../services/subscription';
 import UserAvatar from '../user/UserAvatar';
+import { supabase } from '../../lib/supabase';
 
 interface Server {
   id: string;
@@ -57,7 +58,6 @@ const Sidebar: React.FC = () => {
         console.log('Fetched auth userId', currentAuthUser.username);
         
         // Fetch servers using serverService
-        //const serverData = await serverService.getUserServers(currentAuthUser.id);
         const serverData = await serverService.getAllServersMemberOf(currentAuthUser.id);
         setServers(serverData || []);
         console.log('Fetched servers for auth user', serverData);
@@ -92,13 +92,32 @@ const Sidebar: React.FC = () => {
     });
 
     // Subscribe to profile changes
-    const profileSubscription = subscriptionService.subscribeToUserChanges<UserProfile>((payload) => {
-      setProfile(payload.new as UserProfile);
-    });
+    // const profileSubscription = subscriptionService.subscribeToUserChanges<UserProfile>((payload) => {
+    //   console.log("profileSubscription detected");
+    //   setProfile(payload.new as UserProfile);
+    // });
+
+    // Subscribe to profile changes
+    console.log('Sidebar.tsx: Setting up profile subscription...');
+    const profileSubscription = supabase
+      .channel('profile_changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'users',
+        },
+        (payload) => {
+          console.log('Sidebar.tsx: Received profile update:', payload.new);
+          setProfile(payload.new as UserProfile);
+        }
+      )
+      .subscribe();
 
     return () => {
       serverSubscription();
-      profileSubscription();
+      profileSubscription.unsubscribe();
     };
   }, []);
 
