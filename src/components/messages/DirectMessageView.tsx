@@ -8,12 +8,14 @@ interface DirectMessageViewProps {
   otherUserId: string;
   otherUsername: string;
   otherUserAvatar?: string | null;
+  otherUserStatus: string;
 }
 
 const DirectMessageView: React.FC<DirectMessageViewProps> = ({
   otherUserId,
   otherUsername,
   otherUserAvatar,
+  otherUserStatus,
 }) => {
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -105,7 +107,7 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
           <UserAvatar
             username={otherUsername}
             avatarUrl={otherUserAvatar || null}
-            status="online"
+            status={otherUserStatus}
             size="medium"
           />
           <div>

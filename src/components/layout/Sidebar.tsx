@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { supabase } from '../../lib/supabase';
 import { channelService } from '../../services/channels';
 import { serverService } from '../../services/servers';
 import { userService } from '../../services/users';
 import { authService } from '../../services/auth';
+import { subscriptionService } from '../../services/subscription';
 import UserAvatar from '../user/UserAvatar';
-import StatusIndicator from '../user/StatusIndicator';
 
 interface Server {
   id: string;
@@ -55,10 +54,13 @@ const Sidebar: React.FC = () => {
         // Fetch user auth info first
         const currentAuthUser = await authService.getCurrentUser();
         if (!currentAuthUser) return;
+        console.log('Fetched auth userId', currentAuthUser.username);
         
         // Fetch servers using serverService
-        const serverData = await serverService.getUserServers(currentAuthUser.id);
+        //const serverData = await serverService.getUserServers(currentAuthUser.id);
+        const serverData = await serverService.getAllServersMemberOf(currentAuthUser.id);
         setServers(serverData || []);
+        console.log('Fetched servers for auth user', serverData);
 
         // Get the full user profile from userService for additional fields
         const userProfile = await userService.getUserProfile(currentAuthUser.id);
@@ -74,51 +76,29 @@ const Sidebar: React.FC = () => {
 
     fetchData();
 
-    // Subscribe to server changes
-    const serverSubscription = supabase
-      .channel('servers')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'servers',
-        },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setServers(prev => [...prev, payload.new as Server]);
-          } else if (payload.eventType === 'DELETE') {
-            setServers(prev => prev.filter(server => server.id !== payload.old.id));
-          } else if (payload.eventType === 'UPDATE') {
-            setServers(prev =>
-              prev.map(server =>
-                server.id === payload.new.id ? (payload.new as Server) : server
-              )
-            );
-          }
-        }
-      )
-      .subscribe();
+    // Subscribe to server changes using the subscription service
+    const serverSubscription = subscriptionService.subscribeToServers<Server>((payload) => {
+      if (payload.eventType === 'INSERT') {
+        setServers(prev => [...prev, payload.new as Server]);
+      } else if (payload.eventType === 'DELETE') {
+        setServers(prev => prev.filter(server => server.id !== payload.old.id));
+      } else if (payload.eventType === 'UPDATE') {
+        setServers(prev =>
+          prev.map(server =>
+            server.id === payload.new.id ? (payload.new as Server) : server
+          )
+        );
+      }
+    });
 
     // Subscribe to profile changes
-    const profileSubscription = supabase
-      .channel('profile_changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'users',
-        },
-        (payload) => {
-          setProfile(payload.new as UserProfile);
-        }
-      )
-      .subscribe();
+    const profileSubscription = subscriptionService.subscribeToUserChanges<UserProfile>((payload) => {
+      setProfile(payload.new as UserProfile);
+    });
 
     return () => {
-      serverSubscription.unsubscribe();
-      profileSubscription.unsubscribe();
+      serverSubscription();
+      profileSubscription();
     };
   }, []);
 

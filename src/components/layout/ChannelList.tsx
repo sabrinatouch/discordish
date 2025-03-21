@@ -98,6 +98,16 @@ const ChannelList: React.FC = () => {
         <h2 className="text-white font-semibold">{currentServer.name}</h2>
       </div>
 
+      {/* Add Channel Button */}
+      <div className="p-2">
+        <button className="w-full flex items-center px-2 py-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          Add Channel
+        </button>
+      </div>
+      
       {/* Channel List */}
       <div className="flex-1 overflow-y-auto p-2">
         <div className="space-y-1">
@@ -116,15 +126,6 @@ const ChannelList: React.FC = () => {
         </div>
       </div>
 
-      {/* Add Channel Button */}
-      <div className="p-2">
-        <button className="w-full flex items-center px-2 py-1 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-colors">
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add Channel
-        </button>
-      </div>
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import UserAvatar from './UserAvatar';
 import StatusIndicator from './StatusIndicator';
 import UserStatus from './UserStatus';
+import { userService } from '../../services/users';
 
 interface UserProfile {
   id: string;
@@ -86,16 +87,13 @@ const UserProfile: React.FC = () => {
   const handleStatusChange = async (newStatus: UserProfile['status']) => {
     console.log('UserProfile: Attempting to update status to:', newStatus);
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({ status: newStatus })
-        .eq('id', profile.id);
+      const updatedStatus = await userService.updateUserStatus(profile.id, newStatus);
 
       if (error) {
         console.error('UserProfile: Error updating status:', error);
         throw error;
       }
-      console.log('UserProfile: Successfully updated status');
+      console.log('UserProfile: Successfully updated status to ', updatedStatus?.status);
       setProfile(prev => ({ ...prev, status: newStatus }));
     } catch (error) {
       console.error('UserProfile: Error in handleStatusChange:', error);

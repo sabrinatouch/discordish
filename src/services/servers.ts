@@ -47,6 +47,22 @@ export const serverService = {
     }
   },
 
+  async getAllServersMemberOf(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('servers')
+        .select('*, server_members(*)') // Assuming server_members is the table that links users to servers
+        .eq('server_members.user_id', userId) // Filter by user ID in the server_members table
+        .order('name');
+
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      handleSupabaseError(error);
+      return [];
+    }
+  },
+
   async createServer(serverData: ServerData, userId: string) {
     try {
       const { data, error } = await supabase

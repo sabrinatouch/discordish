@@ -9,6 +9,7 @@ import ChatView from './components/messages/ChatView';
 import UserProfile from './components/user/UserProfile';
 import Settings from './components/user/Settings';
 import DirectMessagesContainer from './components/messages/DirectMessagesContainer';
+import UserList from './components/server/UserList'
 import { channelService } from './services/channels';
 import StatusTest from './components/user/StatusTest';
 
@@ -144,6 +145,7 @@ const App: React.FC = () => {
             <div className="flex flex-1 h-full">
               <ChannelList />
               <ChatView />
+              <UserList />
             </div>
           } />
         </Route>

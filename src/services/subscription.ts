@@ -22,7 +22,7 @@ export const subscriptionService = {
    * @param callback Callback to handle subscription events
    * @returns Function to unsubscribe
    */
-  subscribeToChanges<T>(
+  subscribeToChanges<T extends { [key: string]: any }>(
     channel: string,
     options: SubscriptionOptions,
     callback: (payload: SubscriptionPayload<T>) => void
@@ -60,7 +60,7 @@ export const subscriptionService = {
    * @param callback Callback to handle subscription events
    * @returns Function to unsubscribe
    */
-  subscribeToChannels<T>(
+  subscribeToChannels<T extends { [key: string]: any }>(
     serverId: string,
     callback: (payload: { new: T; old: T; eventType: string }) => void
   ) {
@@ -80,7 +80,7 @@ export const subscriptionService = {
    * @param callback Callback to handle subscription events
    * @returns Function to unsubscribe
    */
-  subscribeToMessages<T>(
+  subscribeToMessages<T extends { [key: string]: any }>(
     channelId: string,
     callback: (payload: { new: T; old: T; eventType: string }) => void
   ) {
@@ -99,7 +99,7 @@ export const subscriptionService = {
    * @param callback Callback to handle subscription events
    * @returns Function to unsubscribe
    */
-  subscribeToServers<T>(
+  subscribeToServers<T extends { [key: string]: any }>(
     callback: (payload: { new: T; old: T; eventType: string }) => void
   ) {
     return this.subscribeToChanges<T>(
@@ -116,7 +116,7 @@ export const subscriptionService = {
    * @param callback Callback to handle subscription events
    * @returns Function to unsubscribe
    */
-  subscribeToUserChanges<T>(
+  subscribeToUserChanges<T extends { [key: string]: any }>(
     callback: (payload: { new: T; old: T; eventType: string }) => void
   ) {
     return this.subscribeToChanges<T>(
