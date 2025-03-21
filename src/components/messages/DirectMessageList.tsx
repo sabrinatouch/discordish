@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
+import UserAvatar from '../user/UserAvatar';
 
 interface User {
   id: string;
@@ -102,10 +103,11 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
                 }`}
               >
                 <div className="relative">
-                  <img
-                    src={user.avatar_url || 'https://i.pravatar.cc/150?img=1'}
-                    alt={user.username}
-                    className="w-10 h-10 rounded-full"
+                  <UserAvatar
+                    username={user.username}
+                    avatarUrl={user.avatar_url}
+                    status={user.status}
+                    size="medium"
                   />
                   <div
                     className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-gray-900 ${

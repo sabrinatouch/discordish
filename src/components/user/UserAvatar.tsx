@@ -60,7 +60,9 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
           <img
             src={avatarUrl}
             alt={username}
-            className="w-full h-full rounded-full object-cover"
+            width={'40px'}
+            height={'40px'}
+            className="rounded-full object-cover"
           />
         ) : (
           <span className={`${textSizeClasses[size]} text-white`}>
