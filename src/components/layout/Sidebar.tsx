@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { channelService } from '../../services/channels';
+import { serverService } from '../../services/servers';
+import { userService } from '../../services/users';
+import { authService } from '../../services/auth';
+import { UserProfile as AuthUserProfile } from '../../services/auth';
 
 interface Server {
   id: string;
@@ -47,26 +51,18 @@ const Sidebar: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch servers
-        const { data: serverData, error: serverError } = await supabase
-          .from('servers')
-          .select('*')
-          .order('name');
-
-        if (serverError) throw serverError;
+        // Fetch user auth info first
+        const currentAuthUser = await authService.getCurrentUser();
+        if (!currentAuthUser) return;
+        
+        // Fetch servers using serverService
+        const serverData = await serverService.getUserServers(currentAuthUser.id);
         setServers(serverData || []);
 
-        // Fetch user profile
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profileData, error: profileError } = await supabase
-            .from('users')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-          if (profileError) throw profileError;
-          setProfile(profileData);
+        // Get the full user profile from userService for additional fields
+        const userProfile = await userService.getUserProfile(currentAuthUser.id);
+        if (userProfile) {
+          setProfile(userProfile as UserProfile);
         }
       } catch (error) {
         console.error('Error fetching data:', error);

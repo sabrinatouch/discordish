@@ -1,15 +1,43 @@
 import { supabase } from '../lib/supabase';
 import { handleSupabaseError } from '../lib/supabase';
 
-export interface UpdateProfileData {
+export interface UserProfile {
+  id: string;
+  username: string;
+  avatar_url: string | null;
+  status: 'online' | 'offline' | 'idle' | 'dnd' | 'invisible';
+  bio: string | null;
+  created_at: string;
+}
+
+export interface UserUpdateData {
   username?: string;
-  email?: string;
   avatar_url?: string;
   status?: 'online' | 'offline' | 'idle' | 'dnd' | 'invisible';
+  bio?: string;
 }
 
 export const userService = {
-  async getProfile(userId: string) {
+  async getCurrentUser() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      handleSupabaseError(error);
+      return null;
+    }
+  },
+
+  async getUserProfile(userId: string) {
     try {
       const { data, error } = await supabase
         .from('users')
@@ -21,14 +49,15 @@ export const userService = {
       return data;
     } catch (error) {
       handleSupabaseError(error);
+      return null;
     }
   },
 
-  async updateProfile(userId: string, updateData: UpdateProfileData) {
+  async updateUserProfile(userId: string, userData: UserUpdateData) {
     try {
       const { data, error } = await supabase
         .from('users')
-        .update(updateData)
+        .update(userData)
         .eq('id', userId)
         .select()
         .single();
@@ -37,6 +66,24 @@ export const userService = {
       return data;
     } catch (error) {
       handleSupabaseError(error);
+      return null;
+    }
+  },
+
+  async updateUserStatus(userId: string, status: 'online' | 'offline' | 'idle' | 'dnd' | 'invisible') {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .update({ status })
+        .eq('id', userId)
+        .select('status')
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      handleSupabaseError(error);
+      return null;
     }
   },
 

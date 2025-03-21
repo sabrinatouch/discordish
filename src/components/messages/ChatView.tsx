@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { messageService } from '../../services/messages';
+import { authService } from '../../services/auth';
+import { subscriptionService } from '../../services/subscription';
 
 interface Message {
   id: string;
@@ -32,16 +35,9 @@ const ChatView: React.FC = () => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const { data, error } = await supabase
-          .from('messages')
-          .select(`
-            *,
-            user:users(username, avatar_url)
-          `)
-          .eq('channel_id', channelId)
-          .order('created_at', { ascending: true });
-
-        if (error) throw error;
+        if (!channelId) return;
+        
+        const data = await messageService.getChatMessages(channelId);
         setMessages(data || []);
       } catch (error) {
         console.error('Error fetching messages:', error);
@@ -53,25 +49,19 @@ const ChatView: React.FC = () => {
 
     fetchMessages();
 
-    // Subscribe to new messages
-    const subscription = supabase
-      .channel(`messages:${channelId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `channel_id=eq.${channelId}`,
-        },
+    // Subscribe to new messages using subscriptionService
+    const unsubscribe = channelId ? 
+      subscriptionService.subscribeToMessages<Message>(
+        channelId,
         (payload) => {
-          setMessages(prev => [...prev, payload.new as Message]);
+          if (payload.eventType === 'INSERT') {
+            setMessages(prev => [...prev, payload.new]);
+          }
         }
-      )
-      .subscribe();
+      ) : () => {};
 
     return () => {
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [channelId]);
 
@@ -80,26 +70,20 @@ const ChatView: React.FC = () => {
     if (!newMessage.trim() || !channelId) return;
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      // Get current user from authService
+      const currentUser = await authService.getCurrentUser();
+      if (!currentUser) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase
-        .from('messages')
-        .insert([
-          {
-            content: newMessage.trim(),
-            user_id: user.id,
-            channel_id: channelId,
-          },
-        ])
-        .select(`
-          *,
-          user:users(username, avatar_url)
-        `)
-        .single();
+      const messageData = {
+        content: newMessage.trim(),
+        user_id: currentUser.id,
+        channel_id: channelId,
+      };
 
-      if (error) throw error;
-      setMessages(prev => [...prev, data]);
+      const data = await messageService.sendMessage(messageData);
+      if (data) {
+        setMessages(prev => [...prev, data]);
+      }
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);

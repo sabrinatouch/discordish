@@ -131,4 +131,35 @@ export const authService = {
       throw error;
     }
   },
+
+  async resetPassword(email: string) {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      handleSupabaseError(error);
+      return false;
+    }
+  },
+
+  async updatePassword(password: string) {
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password,
+      });
+      if (error) throw error;
+      return true;
+    } catch (error) {
+      handleSupabaseError(error);
+      return false;
+    }
+  },
+
+  onAuthStateChange(callback: (user: any) => void) {
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      callback(session?.user || null);
+    });
+    return data.subscription.unsubscribe;
+  }
 }; 

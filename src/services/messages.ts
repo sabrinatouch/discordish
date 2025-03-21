@@ -137,4 +137,27 @@ export const messageService = {
       handleSupabaseError(error);
     }
   },
+
+  async getChatMessages(channelId: string, limit: number = 50) {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select(`
+          *,
+          user:users (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('channel_id', channelId)
+        .order('created_at', { ascending: true })
+        .limit(limit);
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      handleSupabaseError(error);
+      return [];
+    }
+  },
 }; 

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { channelService } from '../../services/channels';
+import { serverService } from '../../services/servers';
 
 interface Channel {
   id: string;
@@ -25,24 +27,12 @@ const ChannelList: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch server data
-        const { data: serverData, error: serverError } = await supabase
-          .from('servers')
-          .select('*')
-          .eq('id', serverId)
-          .single();
-
-        if (serverError) throw serverError;
+        // Fetch server data using serverService
+        const serverData = await serverService.getServer(serverId!);
         setCurrentServer(serverData);
 
-        // Fetch channels
-        const { data: channelData, error: channelError } = await supabase
-          .from('channels')
-          .select('*')
-          .eq('server_id', serverId)
-          .order('name');
-
-        if (channelError) throw channelError;
+        // Fetch channels using channelService
+        const channelData = await channelService.getServerChannels(serverId!);
         setChannels(channelData || []);
       } catch (error) {
         console.error('Error fetching data:', error);

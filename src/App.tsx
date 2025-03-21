@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams, Outlet, useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
+import { authService } from './services/auth';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
 import Sidebar from './components/layout/Sidebar';
@@ -72,8 +73,8 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   React.useEffect(() => {
     const checkUser = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        setUser(user);
+        const authUser = await authService.getCurrentUser();
+        setUser(authUser);
       } catch (error) {
         console.error('Error checking user:', error);
       } finally {
@@ -83,11 +84,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    // Set up auth state change listener
+    const unsubscribe = authService.onAuthStateChange((authUser) => {
+      setUser(authUser);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   if (loading) {
