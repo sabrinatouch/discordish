@@ -32,27 +32,6 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     large: 'text-2xl',
   };
 
-  // Status size mapping - converting avatar size to appropriate status size
-  const statusSizeMap = {
-    small: 'small',
-    medium: 'small',
-    large: 'medium',
-  } as const;
-
-  // Determine positioning offsets for status indicator to overlay the avatar
-  const getStatusPositionStyle = () => {
-    switch (size) {
-      case 'small':
-        return { right: '0', bottom: '0', transform: 'translate(25%, 25%)' };
-      case 'medium':
-        return { right: '0', bottom: '0', transform: 'translate(25%, 25%)' };
-      case 'large':
-        return { right: '0', bottom: '0', transform: 'translate(25%, 25%)' };
-      default:
-        return { right: '0', bottom: '0', transform: 'translate(25%, 25%)' };
-    }
-  };
-
   return (
     <div className={`relative inline-flex ${className}`}>
       <div className={`${sizeClasses[size]} rounded-full bg-gray-600 flex items-center justify-center overflow-hidden`}>
@@ -60,9 +39,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
           <img
             src={avatarUrl}
             alt={username}
-            width={'40px'}
-            height={'40px'}
-            className="rounded-full object-cover"
+            className="w-full rounded-full object-cover"
           />
         ) : (
           <span className={`${textSizeClasses[size]} text-white`}>
@@ -73,15 +50,11 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       
       {showStatus && (
         <div 
-          className="absolute z-10"
-          style={getStatusPositionStyle()}
+          className="absolute z-10 right-0 bottom-0"
         >
           <StatusIndicator 
             status={status} 
             showLabel={false} 
-            size={statusSizeMap[size]} 
-            className="p-0 m-0" 
-            statusClassName="border-2 border-gray-800" 
           />
         </div>
       )}

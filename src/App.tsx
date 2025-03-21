@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useParams, Outlet, useNavigate } from 'react-router-dom';
-import { supabase } from './lib/supabase';
 import { authService } from './services/auth';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';

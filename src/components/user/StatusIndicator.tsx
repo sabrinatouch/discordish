@@ -15,7 +15,6 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   showLabel = true,
   size = 'small',
   className = '',
-  style = {},
   statusClassName = '',
 }) => {
   // Status text mapping with more descriptive labels
@@ -44,10 +43,9 @@ const StatusIndicator: React.FC<StatusIndicatorProps> = ({
   };
 
   return (
-    <div className={`flex items-center gap-2 ${className}`} style={style}>
+    <div className={`flex items-center gap-2 ${className}`}>
       <UserStatus 
         status={status} 
-        size={size} 
         className={statusClassName} 
         showBorder={true}
       />

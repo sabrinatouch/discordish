@@ -5,7 +5,6 @@ import { channelService } from '../../services/channels';
 import { serverService } from '../../services/servers';
 import { userService } from '../../services/users';
 import { authService } from '../../services/auth';
-import { UserProfile as AuthUserProfile } from '../../services/auth';
 import UserAvatar from '../user/UserAvatar';
 import StatusIndicator from '../user/StatusIndicator';
 
@@ -139,11 +138,11 @@ const Sidebar: React.FC = () => {
           {/* Home Button */}
           <Link
             to="/channels/@me"
-            className={`flex items-center justify-center w-10 h-10 rounded-full hover:rounded-2xl transition-all duration-200 ${
+            className={`flex items-center justify-center w-10 h-10 rounded-xl hover:rounded-2xl transition-all duration-200 ${
               location.pathname === '/channels/@me' ? 'bg-indigo-600' : 'bg-gray-800 hover:bg-gray-700'
             }`}
           >
-            <svg className="text-white" width="40px" height="40px" fill="none" stroke="currentColor" viewBox="0 0 22 22">
+            <svg className="text-white w-40 h-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
             </svg>
           </Link>
@@ -163,7 +162,7 @@ const Sidebar: React.FC = () => {
                   alt={server.name}
                   width={'40px'}
                   height={'40px'}
-                  className="rounded-full"
+                  className="rounded-xl"
                 />
               ) : (
                 <span className="text-white text-lg font-semibold">
@@ -200,7 +199,6 @@ const Sidebar: React.FC = () => {
                 {profile?.username}
               </p>
               <div className="flex items-center">
-                <StatusIndicator status={profile?.status || 'offline'} size="small" showLabel={false} />
                 <span className="ml-1 text-xs text-gray-400 capitalize">
                   {profile?.status}
                 </span>

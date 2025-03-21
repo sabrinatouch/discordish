@@ -15,13 +15,13 @@ const UserStatus: React.FC<UserStatusProps> = ({
 }) => {
   // Size mapping for the dot
   const sizeMap = {
-    small: { size: '8px' },
-    medium: { size: '10px' },
-    large: { size: '14px' },
+    small: { size: '12px' },
+    medium: { size: '16px' },
+    large: { size: '20px' },
   };
 
   const { size: dotSize } = sizeMap[size];
-  const borderSize = showBorder ? '2px' : '0';
+  const borderSize = showBorder ? '3px' : '0';
   
   // Status color mapping
   const getStatusColor = () => {
