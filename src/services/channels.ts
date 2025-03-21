@@ -30,16 +30,25 @@ export const channelService = {
 
   async getServerChannels(serverId: string) {
     try {
+      console.log('Fetching channels for server ID:', serverId);
+      
       const { data, error } = await supabase
         .from('channels')
         .select('*')
         .eq('server_id', serverId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching channels:', error);
+        throw error;
+      }
+      
+      console.log('Channel fetch response:', data);
       return data;
     } catch (error) {
+      console.error('Error in getServerChannels:', error);
       handleSupabaseError(error);
+      return []; // Return empty array to prevent undefined errors
     }
   },
 

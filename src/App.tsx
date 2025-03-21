@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useParams, Outlet, useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
@@ -9,11 +9,70 @@ import ChatView from './components/messages/ChatView';
 import UserProfile from './components/user/UserProfile';
 import Settings from './components/user/Settings';
 import DirectMessagesContainer from './components/messages/DirectMessagesContainer';
+import { channelService } from './services/channels';
 
-// Server Redirect component to handle the redirect with parameters
-const ServerRedirect: React.FC = () => {
+// Component to handle server redirect with proper URL parameters
+const ServerChannelRedirect: React.FC = () => {
   const { serverId } = useParams<{ serverId: string }>();
-  return <Navigate to={`/channels/${serverId}/general`} replace />;
+  const navigate = useNavigate();
+  const [error, setError] = React.useState<string | null>(null);
+  
+  React.useEffect(() => {
+    const fetchAndRedirect = async () => {
+      try {
+        // Fetch channels for the server
+        const { data: channels, error: channelError } = await supabase
+          .from('channels')
+          .select('id, name')
+          .eq('server_id', serverId)
+          .order('created_at')
+          .limit(1);
+          
+        if (channelError) {
+          console.error('Error fetching channels:', channelError);
+          setError('Error loading channels');
+          return;
+        }
+        
+        if (!channels || channels.length === 0) {
+          setError('No channels found in this server');
+          return;
+        }
+        
+        // Navigate to the first channel
+        navigate(`/channels/${serverId}/${channels[0].id}`, { replace: true });
+      } catch (error) {
+        console.error('Error in channel redirect:', error);
+        setError('Error loading server');
+      }
+    };
+
+    fetchAndRedirect();
+  }, [serverId, navigate]);
+
+  // If there's an error, show it
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-white text-center p-8 bg-gray-800 rounded-lg">
+          <div className="text-xl mb-4">{error}</div>
+          <button 
+            onClick={() => navigate('/channels/@me')}
+            className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition-colors"
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading spinner while fetching
+  return (
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+    </div>
+  );
 };
 
 // Protected Route wrapper component
@@ -57,6 +116,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   return <>{children}</>;
 };
 
+// Layout for channel and direct message routes
+const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="flex h-screen">
+    <Sidebar />
+    {children}
+  </div>
+);
+
 const App: React.FC = () => {
   return (
     <Router>
@@ -70,11 +137,10 @@ const App: React.FC = () => {
           path="/channels/:serverId/:channelId"
           element={
             <ProtectedRoute>
-              <div className="flex h-screen">
-                <Sidebar />
+              <AppLayout>
                 <ChannelList />
                 <ChatView />
-              </div>
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -82,10 +148,9 @@ const App: React.FC = () => {
           path="/channels/@me"
           element={
             <ProtectedRoute>
-              <div className="flex h-screen">
-                <Sidebar />
+              <AppLayout>
                 <DirectMessagesContainer />
-              </div>
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -95,12 +160,11 @@ const App: React.FC = () => {
           path="/profile"
           element={
             <ProtectedRoute>
-              <div className="flex h-screen">
-                <Sidebar />
+              <AppLayout>
                 <div className="flex-1 bg-gray-700">
                   <UserProfile />
                 </div>
-              </div>
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -110,12 +174,11 @@ const App: React.FC = () => {
           path="/settings"
           element={
             <ProtectedRoute>
-              <div className="flex h-screen">
-                <Sidebar />
+              <AppLayout>
                 <div className="flex-1 bg-gray-700">
                   <Settings />
                 </div>
-              </div>
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -135,7 +198,7 @@ const App: React.FC = () => {
           path="/channels/:serverId"
           element={
             <ProtectedRoute>
-              <ServerRedirect />
+              <ServerChannelRedirect />
             </ProtectedRoute>
           }
         />

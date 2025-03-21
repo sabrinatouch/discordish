@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
-import { mockServers } from '../../lib/mockData';
+import { channelService } from '../../services/channels';
 
 interface Server {
   id: string;
@@ -19,9 +19,35 @@ interface UserProfile {
 
 const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [servers, setServers] = useState<Server[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Handle server click to navigate to the first channel
+  const handleServerClick = async (serverId: string) => {
+    try {
+      // Fetch the first channel in this server
+      const { data: channels } = await supabase
+        .from('channels')
+        .select('id')
+        .eq('server_id', serverId)
+        .order('created_at')
+        .limit(1);
+      
+      if (channels && channels.length > 0) {
+        // Navigate directly to the first channel
+        navigate(`/channels/${serverId}/${channels[0].id}`);
+      } else {
+        // Fall back to server route if no channels
+        navigate(`/channels/${serverId}`);
+      }
+    } catch (error) {
+      // If any error, fall back to server route
+      console.error('Error navigating to server:', error);
+      navigate(`/channels/${serverId}`);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -49,7 +75,6 @@ const Sidebar: React.FC = () => {
         }
       } catch (error) {
         console.error('Error fetching data:', error);
-        setServers(mockServers);
       } finally {
         setLoading(false);
       }
@@ -132,11 +157,11 @@ const Sidebar: React.FC = () => {
 
           {/* Server List */}
           {servers.map((server) => (
-            <Link
+            <button
               key={server.id}
-              to={`/channels/${server.id}`}
+              onClick={() => handleServerClick(server.id)}
               className={`flex items-center justify-center w-12 h-12 rounded-full hover:rounded-2xl transition-all duration-200 ${
-                location.pathname === `/channels/${server.id}` ? 'bg-indigo-600' : 'bg-gray-800 hover:bg-gray-700'
+                location.pathname.startsWith(`/channels/${server.id}`) ? 'bg-indigo-600' : 'bg-gray-800 hover:bg-gray-700'
               }`}
             >
               {server.icon_url ? (
@@ -150,7 +175,7 @@ const Sidebar: React.FC = () => {
                   {server.name.charAt(0)}
                 </span>
               )}
-            </Link>
+            </button>
           ))}
 
           {/* Add Server Button */}
