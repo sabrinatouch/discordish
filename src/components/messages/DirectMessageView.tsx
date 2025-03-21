@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { directMessageService, DirectMessage } from '../../services/directMessages';
 import { supabase } from '../../lib/supabase';
 import UserAvatar from '../user/UserAvatar';
-import StatusIndicator from '../user/StatusIndicator';
 
 interface DirectMessageViewProps {
   otherUserId: string;
@@ -107,7 +106,7 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
           <UserAvatar
             username={otherUsername}
             avatarUrl={otherUserAvatar || null}
-            status={otherUserStatus}
+            status={otherUserStatus as "online" | "offline" | "idle" | "dnd" | "invisible" | undefined}
             size="medium"
           />
           <div>
