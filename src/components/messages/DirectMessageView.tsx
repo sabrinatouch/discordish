@@ -100,7 +100,7 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center p-4 border-b border-gray-700">
+      <div className="flex items-center p-4 border-b border-gray-700" style={{ padding: '10px' }}>
         <div className="flex items-center space-x-3">
           <UserAvatar
             username={otherUsername}
@@ -110,7 +110,6 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
           />
           <div>
             <h2 className="text-lg font-semibold text-white">{otherUsername}</h2>
-            <StatusIndicator status="online" size="small" />
           </div>
         </div>
       </div>

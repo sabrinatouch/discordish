@@ -109,21 +109,9 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
                     status={user.status}
                     size="medium"
                   />
-                  <div
-                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-gray-900 ${
-                      user.status === 'online'
-                        ? 'bg-green-500'
-                        : user.status === 'idle'
-                        ? 'bg-yellow-500'
-                        : user.status === 'dnd'
-                        ? 'bg-red-500'
-                        : 'bg-gray-500'
-                    }`}
-                  />
                 </div>
                 <div className="flex-1 text-left">
                   <p className="text-white font-medium">{user.username}</p>
-                  <p className="text-sm text-gray-400 capitalize">{user.status}</p>
                 </div>
               </button>
             ))
