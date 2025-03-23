@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../../services/auth';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -15,13 +15,16 @@ const Login: React.FC = () => {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { user, session } = await authService.login({
         email,
         password,
       });
 
       if (error) throw error;
-      navigate('/channels/@me');
+
+      if (user && session) {
+        navigate('/channels/@me');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during login');
     } finally {
