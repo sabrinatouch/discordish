@@ -80,7 +80,7 @@ const Login: React.FC = () => {
         </form>
         <p className="mt-4 text-sm text-[#949BA4]">
           Need an account?{' '}
-          <a href="/signup" className="text-[#00A8FC] hover:underline">
+          <a onClick={() => navigate('/signup')} className="text-[#00A8FC] hover:underline">
             Register
           </a>
         </p>
