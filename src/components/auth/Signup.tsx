@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/auth';
 
 const Signup: React.FC = () => {
@@ -105,9 +105,9 @@ const Signup: React.FC = () => {
         </form>
         <p className="mt-4 text-sm text-[#949BA4]">
           Already have an account?{' '}
-          <a onClick={() => navigate('/login')} className="text-[#00A8FC] hover:underline">
+          <Link to="/login" className="text-[#00A8FC] hover:underline">
             Sign in
-          </a>
+          </Link>
         </p>
       </div>
     </div>

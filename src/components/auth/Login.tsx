@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../../services/auth';
 
 const Login: React.FC = () => {
@@ -88,9 +88,9 @@ const Login: React.FC = () => {
         </form>
         <p className="mt-4 text-sm text-[#949BA4]">
           Need an account?{' '}
-          <a onClick={() => navigate('/signup')} className="text-[#00A8FC] hover:underline">
+          <Link to="/signup" className="text-[#00A8FC] hover:underline">
             Register
-          </a>
+          </Link>
         </p>
       </div>
     </div>
