@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase';
 import { useNavigate } from 'react-router-dom';
+import { authService } from '../../services/auth';
 
 const Signup: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -16,33 +16,18 @@ const Signup: React.FC = () => {
     setError(null);
 
     try {
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { user, session } = await authService.signUp({
         email,
         password,
-        options: {
-          data: {
-            username,
-          },
-        },
+        username,
       });
 
-      if (signUpError) throw signUpError;
+      if (error) throw error;
 
-      // Create user profile in the users table
-      const { error: profileError } = await supabase
-        .from('users')
-        .insert([
-          {
-            username,
-            email,
-            avatar_url: null,
-            status: 'offline',
-          },
-        ]);
-
-      if (profileError) throw profileError;
-
-      navigate('/channels/@me');
+      // Navigate to the login after successful signup
+      if (user && session) {
+        navigate('/login');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred during signup');
     } finally {
