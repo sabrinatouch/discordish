@@ -73,13 +73,18 @@ const Login: React.FC = () => {
               {error}
             </div>
           )}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2.5 px-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-[3px] font-medium text-sm transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-          >
-            {loading ? 'Logging in...' : 'Log In'}
-          </button>
+          <div className="mt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full"
+            >
+              <div className="py-2.5 px-4 bg-[#5865F2] hover:bg-[#4752C4] text-white rounded-[3px] font-medium text-sm transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+              {loading ? 'Logging in...' : 'Log In'}
+              </div>
+            </button>
+          </div>
         </form>
         <p className="mt-4 text-sm text-[#949BA4]">
           Need an account?{' '}
