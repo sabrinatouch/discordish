@@ -7,10 +7,6 @@ export interface DirectMessage {
   receiver_id: string;
   content: string;
   created_at: string;
-  sender?: {
-    username: string;
-    avatar_url: string | null;
-  };
 }
 
 export interface SendDirectMessageData {
@@ -19,21 +15,19 @@ export interface SendDirectMessageData {
 }
 
 export const directMessageService = {
-  async getDirectMessages(userId: string, otherUserId: string): Promise<DirectMessage[]> {
+  async getDirectMessages(conversationId: string): Promise<DirectMessage[]> {
     try {
       const { data, error } = await supabase
-        .from('direct_messages')
-        .select(`
-          *,
-          sender:users!direct_messages_sender_id_fkey (
-            username,
-            avatar_url
-          )
-        `)
-        .or(`and(sender_id.eq.${userId},receiver_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},receiver_id.eq.${userId})`)
-        .order('created_at', { ascending: true });
+      .from('direct_messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching direct messages:', error);
+        throw error;
+      }
+    
       return data || [];
     } catch (error) {
       handleSupabaseError(error);

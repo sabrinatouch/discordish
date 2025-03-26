@@ -12,6 +12,8 @@ import DirectMessagesContainer from './components/messages/DirectMessagesContain
 import UserList from './components/server/UserList'
 import { channelService } from './services/channels';
 import StatusTest from './components/user/StatusTest';
+import { UserProvider, useUser } from './contexts/UserContext';
+import PublicRoute from './components/auth/PublicRoute';
 
 // Component to handle server redirect with proper URL parameters
 const ServerChannelRedirect: React.FC = () => {
@@ -68,32 +70,33 @@ const ServerChannelRedirect: React.FC = () => {
 
 // Protected Route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [loading, setLoading] = React.useState(true);
-  const [user, setUser] = React.useState<any>(null);
+  //const [loading, setLoading] = React.useState(true);
+  //const [user, setUser] = React.useState<any>(null);
+  const { user, loading } = useUser();
 
-  React.useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const authUser = await authService.getCurrentUser();
-        setUser(authUser);
-      } catch (error) {
-        console.error('Error checking user:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // React.useEffect(() => {
+  //   const checkUser = async () => {
+  //     try {
+  //       const authUser = await authService.getCurrentUser();
+  //       setUser(authUser);
+  //     } catch (error) {
+  //       console.error('Error checking user:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    checkUser();
+  //   checkUser();
 
-    // Set up auth state change listener
-    const unsubscribe = authService.onAuthStateChange((authUser) => {
-      setUser(authUser);
-    });
+  //   // Set up auth state change listener
+  //   const unsubscribe = authService.onAuthStateChange((authUser) => {
+  //     setUser(authUser);
+  //   });
 
-    return () => {
-      unsubscribe();
-    };
-  }, []);
+  //   return () => {
+  //     unsubscribe();
+  //   };
+  // }, []);
 
   if (loading) {
     return (
@@ -113,47 +116,59 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 // Layout for channel and direct message routes
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="flex h-screen">
-    <Sidebar />
-    {children}
+      <Sidebar />
+      {children}
   </div>
 );
 
 const App: React.FC = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        
-        {/* Status test route */}
-        <Route path="/status-test" element={<StatusTest />} />
-        
-        <Route path="/" element={<ProtectedRoute><AppLayout><Outlet /></AppLayout></ProtectedRoute>}>
-          {/* Redirect root to channel list */}
-          <Route path="" element={<Navigate to="/channels/@me" replace />} />
-          
-          {/* Direct messages routes */}
-          <Route path="channels/@me" element={<DirectMessagesContainer />} />
-          
-          {/* User profile and settings */}
-          <Route path="profile" element={<UserProfile />} />
-          <Route path="settings" element={<Settings />} />
-          
-          {/* Server and channel routes */}
-          <Route path="channels/:serverId" element={<ServerChannelRedirect />} />
-          <Route path="channels/:serverId/:channelId" element={
-            <div className="flex flex-1 h-full">
-              <ChannelList />
-              <ChatView />
-              <UserList />
-            </div>
+    <UserProvider>
+      <Router>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/login" element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
           } />
-        </Route>
-        
-        {/* Catch all route */}
-        <Route path="*" element={<Navigate to="/channels/@me" replace />} />
-      </Routes>
-    </Router>
+          <Route path="/signup" element={
+            <PublicRoute>
+              <Signup />
+            </PublicRoute>
+          } />
+
+          {/* Status test route */}
+          <Route path="/status-test" element={<StatusTest />} />
+          
+          <Route path="/" element={<ProtectedRoute><AppLayout><Outlet /></AppLayout></ProtectedRoute>}>
+            {/* Redirect root to channel list */}
+            <Route path="" element={<Navigate to="/channels/@me" replace />} />
+            
+            {/* Direct messages routes */}
+            <Route path="channels/@me" element={<DirectMessagesContainer />} />
+            <Route path="channels/@me/:conversationId" element={<DirectMessagesContainer />} />
+            
+            {/* User profile and settings */}
+            <Route path="profile" element={<UserProfile />} />
+            <Route path="settings" element={<Settings />} />
+            
+            {/* Server and channel routes */}
+            <Route path="channels/:serverId" element={<ServerChannelRedirect />} />
+            <Route path="channels/:serverId/:channelId" element={
+              <div className="flex flex-1 h-full">
+                <ChannelList />
+                <ChatView />
+                <UserList />
+              </div>
+            } />
+          </Route>
+          
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/channels/@me" replace />} />
+        </Routes>
+      </Router>
+    </UserProvider>
   );
 };
 

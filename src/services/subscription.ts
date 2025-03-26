@@ -47,7 +47,9 @@ export const subscriptionService = {
           });
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`Subscription to ${table} status:`, status);
+      });
 
     return () => {
       subscription.unsubscribe();
@@ -69,6 +71,49 @@ export const subscriptionService = {
       {
         table: 'channels',
         filter: `server_id=eq.${serverId}`,
+      },
+      callback
+    );
+  },
+
+  /**
+   * Subscribe to direct messages changes for a specific user
+   * @param userId User ID to subscribe to
+   * @param callback Callback to handle subscription events
+   * @returns Function to unsubscribe
+   */
+  subscribeToDirectMessages<T extends { [key: string]: any }>(
+    currentUserId: string,
+    callback: (payload: { new: T; old: T; eventType: string }) => void
+  ) {
+    return this.subscribeToChanges<T>(
+      `direct_messages:${currentUserId}`,
+      {
+        table: 'direct_messages',
+        filter: `sender_id=eq.${currentUserId} OR receiver_id=eq.${currentUserId}`,
+      },
+      callback
+    );
+  },
+
+  /**
+ * Subscribe to direct messages changes for a specific conversation
+ * @param currentUserId Current user's ID
+ * @param otherUserId Other user's ID in the conversation
+ * @param callback Callback to handle subscription events
+ * @returns Function to unsubscribe
+ */
+  subscribeToConversation<T extends { sender_id: string; receiver_id: string }>(
+    payload: { currentUserId: string; otherUserId: string },
+    callback: (payload: SubscriptionPayload<T>) => void
+  ) {
+    return this.subscribeToChanges<T>(
+      `conversation:${payload.currentUserId}:${payload.otherUserId}`,
+      {
+        event: '*',
+        schema: 'public',
+        table: 'direct_messages',
+        filter: `(sender_id=eq.${payload.currentUserId} AND receiver_id=eq.${payload.otherUserId}) OR (sender_id=eq.${payload.otherUserId} AND receiver_id=eq.${payload.currentUserId})`,
       },
       callback
     );

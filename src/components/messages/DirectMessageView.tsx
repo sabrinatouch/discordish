@@ -2,93 +2,105 @@ import React, { useState, useEffect, useRef } from 'react';
 import { directMessageService, DirectMessage } from '../../services/directMessages';
 import { supabase } from '../../lib/supabase';
 import UserAvatar from '../user/UserAvatar';
+import { subscriptionService } from '../../services/subscription';
+import { conversationService, Conversation } from '../../services/conversations';
+import { UserProfile, userService } from '../../services/users';
 
 interface DirectMessageViewProps {
-  otherUserId: string;
-  otherUsername: string;
-  otherUserAvatar?: string | null;
-  otherUserStatus: string;
+  conversationId: string;
 }
 
 const DirectMessageView: React.FC<DirectMessageViewProps> = ({
-  otherUserId,
-  otherUsername,
-  otherUserAvatar,
-  otherUserStatus,
+  conversationId,
 }) => {
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const unsubscribeRef = useRef<(() => void) | null>(null);
+  const [currentConversation, setCurrentConversation] = useState<string | null>(conversationId);
+  const [otherUsers, setOtherUsers] = useState<UserProfile[]>([]);
+  const [currentParticipants, setCurrentParticipants] = useState<string[]>([]);
+  const [currentOtherParticipants, setCurrentOtherParticipants] = useState<string[]>([]);
 
   useEffect(() => {
     const getCurrentUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUserId(user.id);
-        loadMessages(user.id);
+        loadConversation(conversationId);
       }
     };
     getCurrentUser();
-  }, [otherUserId]);
-
-  const loadMessages = async (userId: string) => {
-    try {
-      const messages = await directMessageService.getDirectMessages(userId, otherUserId);
-      setMessages(messages);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading messages:', error);
-      setLoading(false);
-    }
-  };
+  }, [conversationId]);
 
   useEffect(() => {
     if (!currentUserId) return;
 
-    const setupSubscription = async () => {
-      const unsubscribe = await directMessageService.subscribeToDirectMessages(
-        currentUserId,
-        otherUserId,
-        (newMessage) => {
-          setMessages((prev) => [...prev, newMessage]);
-        }
-      );
-      unsubscribeRef.current = unsubscribe;
-    };
-
-    setupSubscription();
+    console.log('DirectMessageView.tsx: Setting up conversation subscription...');
+    const conversationSubscription = supabase
+      .channel(`conversation:${conversationId}`)
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'direct_messages',
+      }, 
+      (payload) => {
+        // Handle changes to the conversation
+        console.log('DirectMessageView.tsx: Received new direct message:', payload.new);
+        setMessages(payload.new as DirectMessage[]);
+      })
+      .subscribe();
 
     return () => {
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-      }
+      conversationSubscription.unsubscribe();
     };
-  }, [currentUserId, otherUserId]);
+  }, [currentUserId, conversationId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim() || !currentUserId) return;
-
+  const loadConversation = async (conversationId: string) => {
     try {
-      const sentMessage = await directMessageService.sendDirectMessage({
-        content: newMessage,
-        receiver_id: otherUserId,
+      //const currentParticipants = await conversationService.getConversationParticipants(conversationId);
+      const messages = await directMessageService.getDirectMessages(conversationId);
+
+      setCurrentParticipants(currentParticipants);
+      setMessages(messages);
+      setLoading(false);
+
+      console.log('currentParticipants', currentParticipants);
+
+      const filteredParticipants = currentParticipants.filter((id: string) => id !== currentUserId);
+      console.log('filteredParticipants', filteredParticipants);
+
+      filteredParticipants.forEach(async (participantId: string) => {
+        const user = await userService.getUserProfile(participantId);
+        setOtherUsers((prev) => [...prev, user]);
       });
-      
-      // Update local state immediately
-      setMessages(prev => [...prev, sentMessage]);
-      setNewMessage('');
     } catch (error) {
-      console.error('Error sending message:', error);
+      console.error('Error loading conversation:', error);
     }
   };
+
+  // const handleSendMessage = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!newMessage.trim() || !currentUserId) return;
+
+  //   try {
+  //     const sentMessage = await directMessageService.sendDirectMessage({
+  //       content: newMessage,
+  //       receiver_id: otherUserId,
+  //     });
+      
+  //     // Update local state immediately
+  //     setMessages(prev => [...prev, sentMessage]);
+  //     setNewMessage('');
+  //   } catch (error) {
+  //     console.error('Error sending message:', error);
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -102,17 +114,21 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center p-4 border-b border-gray-700" style={{ padding: '10px' }}>
-        <div className="flex items-center space-x-3">
-          <UserAvatar
-            username={otherUsername}
-            avatarUrl={otherUserAvatar || null}
-            status={otherUserStatus as "online" | "offline" | "idle" | "dnd" | "invisible" | undefined}
-            size="medium"
-          />
-          <div>
-            <h2 className="text-lg font-semibold text-white">{otherUsername}</h2>
-          </div>
-        </div>
+          {/* {otherUsers.map((otherUser) => (
+            <div key={otherUser.id} className="flex items-center space-x-3">
+            <UserAvatar
+              key={otherUser.id}
+              username={otherUser.username}
+              avatarUrl={otherUser.avatar_url || null}
+              status={otherUser.status as "online" | "offline" | "idle" | "dnd" | "invisible" | undefined}
+              size="medium"
+            />
+            <div>
+              <h2 className="text-lg font-semibold text-white">{otherUser.username}</h2>
+              </div>
+            </div>
+          ))} */}
+          <p>other user</p>
       </div>
 
       {/* Messages */}
@@ -145,7 +161,8 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
       </div>
 
       {/* Message Input */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-700">
+      {/* <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-700"> */}
+      <form onSubmit={() => {}} className="p-4 border-t border-gray-700">
         <div className="flex space-x-2">
           <input
             type="text"
