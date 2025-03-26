@@ -5,34 +5,52 @@ import UserAvatar from '../user/UserAvatar';
 import { subscriptionService } from '../../services/subscription';
 import { conversationService, Conversation } from '../../services/conversations';
 import { UserProfile, userService } from '../../services/users';
+import { useUser } from '../../contexts/UserContext';
 
 interface DirectMessageViewProps {
   conversationId: string;
+  currentUserId: string;
 }
 
 const DirectMessageView: React.FC<DirectMessageViewProps> = ({
   conversationId,
+  currentUserId,
 }) => {
   const [messages, setMessages] = useState<DirectMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [currentConversation, setCurrentConversation] = useState<string | null>(conversationId);
-  const [otherUsers, setOtherUsers] = useState<UserProfile[]>([]);
+  const [otherUserProfiles, setOtherUserProfiles] = useState<UserProfile[]>([]);
   const [currentParticipants, setCurrentParticipants] = useState<string[]>([]);
-  const [currentOtherParticipants, setCurrentOtherParticipants] = useState<string[]>([]);
 
   useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-        loadConversation(conversationId);
+    const loadConversation = async (conversationId: string) => {
+      try {
+        const currentParticipants = await conversationService.getConversationParticipants(conversationId, currentUserId ?? '');
+        const messages = await directMessageService.getDirectMessages(conversationId);
+
+        setCurrentParticipants(currentParticipants);
+        setMessages(messages);
+
+        currentParticipants.forEach(async (participantId: string) => {
+          const otherUserProfile = await userService.getUserProfile(participantId);
+          setOtherUserProfiles([otherUserProfile]);
+        });
+
+        setLoading(false);
+        console.log('currentParticipants', currentParticipants);
+      } catch (error) {
+        console.error('Error loading conversation:', error);
       }
     };
-    getCurrentUser();
-  }, [conversationId]);
+
+    if (currentUserId) {
+      console.log('currentUserId', currentUserId);
+    }
+
+    loadConversation(conversationId);
+  }, [conversationId, currentUserId]);
 
   useEffect(() => {
     if (!currentUserId) return;
@@ -60,29 +78,6 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-
-  const loadConversation = async (conversationId: string) => {
-    try {
-      //const currentParticipants = await conversationService.getConversationParticipants(conversationId);
-      const messages = await directMessageService.getDirectMessages(conversationId);
-
-      setCurrentParticipants(currentParticipants);
-      setMessages(messages);
-      setLoading(false);
-
-      console.log('currentParticipants', currentParticipants);
-
-      const filteredParticipants = currentParticipants.filter((id: string) => id !== currentUserId);
-      console.log('filteredParticipants', filteredParticipants);
-
-      filteredParticipants.forEach(async (participantId: string) => {
-        const user = await userService.getUserProfile(participantId);
-        setOtherUsers((prev) => [...prev, user]);
-      });
-    } catch (error) {
-      console.error('Error loading conversation:', error);
-    }
-  };
 
   // const handleSendMessage = async (e: React.FormEvent) => {
   //   e.preventDefault();
@@ -114,21 +109,20 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center p-4 border-b border-gray-700" style={{ padding: '10px' }}>
-          {/* {otherUsers.map((otherUser) => (
-            <div key={otherUser.id} className="flex items-center space-x-3">
+          {otherUserProfiles.map((otherUserProfile) => (
+            <div key={otherUserProfile.id} className="flex items-center space-x-3">
             <UserAvatar
-              key={otherUser.id}
-              username={otherUser.username}
-              avatarUrl={otherUser.avatar_url || null}
-              status={otherUser.status as "online" | "offline" | "idle" | "dnd" | "invisible" | undefined}
+              key={otherUserProfile.id}
+              username={otherUserProfile.username}
+              avatarUrl={otherUserProfile.avatar_url || null}
+              status={otherUserProfile.status as "online" | "offline" | "idle" | "dnd" | "invisible" | undefined}
               size="medium"
             />
             <div>
-              <h2 className="text-lg font-semibold text-white">{otherUser.username}</h2>
+              <h2 className="text-lg font-semibold text-white">{otherUserProfile.username}</h2>
               </div>
             </div>
-          ))} */}
-          <p>other user</p>
+          ))}
       </div>
 
       {/* Messages */}

@@ -72,7 +72,6 @@ export const conversationService = {
         .from('conversations')
         .select('participants')
         .eq('id', conversationId)
-        .filter('participants', 'not.is', currentUserId)
         .single();
 
         if (error) {
@@ -80,8 +79,10 @@ export const conversationService = {
             handleSupabaseError(error);
             return [];
         }
-
-        return conversation?.participants || [];
+        
+        // Filter out the current user from the participants
+        const filteredParticipants = conversation?.participants.filter((id: string) => id !== currentUserId);
+        return filteredParticipants || [];
     },
 
     async createConversation(userId1: string, userId2: string) {
