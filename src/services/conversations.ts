@@ -31,23 +31,6 @@ export const conversationService = {
         }
     },
 
-    async searchForConversationByParticipants(userId1: string, userId2: string) {
-        const participants = [userId1, userId2].sort();
-        const { data: existingConversation, error } = await supabase
-            .from('conversations')
-            .select('*')
-            .contains('participants', participants)
-            .single();
-
-        if (error) {
-            console.error('Error searching for conversation:', error);
-            handleSupabaseError(error);
-            return null;
-        }
-
-        return existingConversation ? existingConversation.id : null;
-    },
-
     async searchForConversationByParticipantsBoolean(userId1: string, userId2: string): Promise<boolean> {
         const participants = [userId1, userId2].sort();
         const { count, error } = await supabase
@@ -87,6 +70,23 @@ export const conversationService = {
             handleSupabaseError(error);
             return null;
         }
+    },
+
+    async getConversationByParticipants(userId1: string, userId2: string) {
+        const participants = [userId1, userId2].sort();
+        const { data: existingConversation, error } = await supabase
+            .from('conversations')
+            .select('*')
+            .contains('participants', participants)
+            .single();
+
+        if (error) {
+            console.error('Error searching for conversation:', error);
+            handleSupabaseError(error);
+            return null;
+        }
+
+        return existingConversation ? existingConversation.id : null;
     },
 
     async getConversationParticipants(conversationId: string, currentUserId: string) {

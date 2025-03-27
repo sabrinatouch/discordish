@@ -72,7 +72,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
 
       console.log('DirectMessagesList.tsx: checkConversationExists:', checkConversationExists);
       if (checkConversationExists) {
-        const existingConversationId = await conversationService.searchForConversationByParticipants(
+        const existingConversationId = await conversationService.getConversationByParticipants(
           currentUserId,
           selectedUser.id
         );
@@ -84,7 +84,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
           selectedUser.id
         );
         console.log('New conversation created:', conversationId);
-        await loadExistingConversations(currentUserId);
+        loadExistingConversations(currentUserId);
       }
 
       // Navigate to the conversation
