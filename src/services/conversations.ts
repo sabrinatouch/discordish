@@ -39,12 +39,6 @@ export const conversationService = {
             .contains('participants', participants)
             .single();
 
-        // if (error) {
-        //     console.error('Error fetching conversation:', error);
-        //     handleSupabaseError(error);
-        //     return null;
-        // }
-        
         return existingConversation ? existingConversation.id : null;
     },
 

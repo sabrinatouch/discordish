@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import UserAvatar from '../user/UserAvatar';
 import { Conversation, conversationService } from '../../services/conversations';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -12,37 +13,32 @@ interface User {
 }
 
 interface DirectMessageListProps {
-  //onSelectUser: (user: User) => void;
   onSelectConversation: (conversation: Conversation) => void;
-  //selectedUserId?: string;
   selectedConversationId?: string;
+  currentUserId: string;
 }
 
 const DirectMessageList: React.FC<DirectMessageListProps> = ({
-  //onSelectUser,
   onSelectConversation,
-  //selectedUserId,
   selectedConversationId,
+  currentUserId
 }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [userDetails, setUserDetails] = useState<{ [key: string]: User }>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const getCurrentUser = async () => {
+    const loadAssets = async () => {
       try {
-        const { data: { user }, error: userError } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        
-        console.log('Current user:', user);
-        if (user) {
-          await setCurrentUserId(user.id);
-          await loadUsers(user.id);
-          await loadExistingConversations(user.id);
+        console.log('DirectMessagesList.tsx: Loading assets...');
+        console.log('DirectMessagesList.tsx: Current user:', currentUserId);
+        if (currentUserId) {
+          await loadUsers(currentUserId);
+          await loadExistingConversations(currentUserId);
         }
       } catch (error) {
         console.error('Error getting current user:', error);
@@ -50,29 +46,53 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
         setLoading(false);
       }
     };
-    getCurrentUser();
+    loadAssets();
   }, []);
 
-  const handleSelectUser = async (user: User) => {
-    //onSelectUser(user);
-    setIsModalOpen(false);
-    if (currentUserId) {
-      console.log('Current user ID:', currentUserId);
-      console.log('Selected user ID:', user.id);
-      const existingConversationId = await conversationService.searchForConversationByParticipants(user.id, currentUserId);
-      if (existingConversationId) {
-        console.log('Conversation already exists');
-        onSelectConversation(existingConversationId);
-      } else {
-        console.log('Conversation does not exist, creating new one...');
-        const newConversationId = await conversationService.createConversation(user.id, currentUserId);
-        console.log('New conversation ID:', newConversationId);
-        onSelectConversation(newConversationId);
+  const handleSelectUser = async (selectedUser: User) => {
+    try {
+      setIsModalOpen(false);
+      if (!currentUserId) {
+        console.error('No current user ID found');
+        return;
       }
+
+      console.log('Current user ID:', currentUserId);
+      console.log('Selected user ID:', selectedUser.id);
+
+      // Check if a conversation already exists
+      const existingConversationId = await conversationService.searchForConversationByParticipants(
+        currentUserId,
+        selectedUser.id
+      );
+
+      let conversationId: string;
+
+      if (existingConversationId) {
+        console.log('DirectMessagesList.tsx: Conversation already exists:', existingConversationId);
+        conversationId = existingConversationId;
+      } else {
+        console.log('DirectMessagesList.tsx: Creating new conversation...');
+        conversationId = await conversationService.createConversation(
+          currentUserId,
+          selectedUser.id
+        );
+        console.log('New conversation created:', conversationId);
+        await loadExistingConversations(currentUserId);
+      }
+
+      // Navigate to the conversation
+      navigate(`/channels/@me/${conversationId}`);
+    } catch (error) {
+      console.error('Error handling user selection:', error);
+      setError('Failed to handle user selection');
     }
+
+    console.log('DirectMessagesList.tsx: handleSelectUser completed.');
   };
 
   const handleSelectConversation = async (conversation: Conversation) => {
+    console.log('DirectMessagesList.tsx: handleSelectConversation...');
     onSelectConversation(conversation);
   };
 

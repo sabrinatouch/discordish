@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import DirectMessageList from './DirectMessageList';
-import DirectMessageView from './DirectMessageView';
+import React, { useEffect, useState } from 'react';
+import DirectMessageList from './DirectMessagesList';
+import DirectMessageView from './DirectMessagesView';
 import { Conversation } from '../../services/conversations';
 import { useUser } from '../../contexts/UserContext';
+import { useParams } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -13,27 +14,31 @@ interface User {
 
 const DirectMessagesContainer: React.FC = () => {
   const { user } = useUser();
-  const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const { conversationId: paramConversationId } = useParams<{ conversationId: string }>();
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(paramConversationId || null);
 
-  const handleSelectConversation = (conversation: Conversation) => {
-    setSelectedConversation(conversation);
-  };
+  useEffect(() => {
+    if (paramConversationId) {
+      setSelectedConversationId(paramConversationId);
+    }
+  }, [paramConversationId]);
 
   return (
     <div className="flex h-full">
       {/* Direct Messages List */}
       <div className="w-64 border-r border-gray-700">
         <DirectMessageList
-          onSelectConversation={handleSelectConversation}
-          selectedConversationId={selectedConversation?.id}
+          onSelectConversation={(conversation: Conversation) => setSelectedConversationId(conversation.id)}
+          selectedConversationId={selectedConversationId || undefined}
+          currentUserId={user.id}
         />
       </div>
 
       {/* Direct Message View */}
       <div className="flex-1">
-        {selectedConversation ? (
+        {selectedConversationId ? (
           <DirectMessageView
-            conversationId={selectedConversation?.id}
+            conversationId={selectedConversationId}
             currentUserId={user.id}
           />
         ) : (

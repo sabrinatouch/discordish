@@ -8,7 +8,7 @@ import ChannelList from './components/layout/ChannelList';
 import ChatView from './components/messages/ChatView';
 import UserProfile from './components/user/UserProfile';
 import Settings from './components/user/Settings';
-import DirectMessagesContainer from './components/messages/DirectMessagesContainer';
+import DirectMessagesContainer from './components/directmessages/DirectMessagesContainer';
 import UserList from './components/server/UserList'
 import { channelService } from './services/channels';
 import StatusTest from './components/user/StatusTest';
@@ -70,33 +70,7 @@ const ServerChannelRedirect: React.FC = () => {
 
 // Protected Route wrapper component
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  //const [loading, setLoading] = React.useState(true);
-  //const [user, setUser] = React.useState<any>(null);
   const { user, loading } = useUser();
-
-  // React.useEffect(() => {
-  //   const checkUser = async () => {
-  //     try {
-  //       const authUser = await authService.getCurrentUser();
-  //       setUser(authUser);
-  //     } catch (error) {
-  //       console.error('Error checking user:', error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   checkUser();
-
-  //   // Set up auth state change listener
-  //   const unsubscribe = authService.onAuthStateChange((authUser) => {
-  //     setUser(authUser);
-  //   });
-
-  //   return () => {
-  //     unsubscribe();
-  //   };
-  // }, []);
 
   if (loading) {
     return (
