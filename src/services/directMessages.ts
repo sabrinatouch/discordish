@@ -4,14 +4,16 @@ import { handleSupabaseError } from '../lib/supabase';
 export interface DirectMessage {
   id: string;
   sender_id: string;
-  receiver_id: string;
+  receiver_ids: string[];
   content: string;
   created_at: string;
+  conversation_id: string;
 }
 
 export interface SendDirectMessageData {
   content: string;
-  receiver_id: string;
+  receiver_ids: string[];
+  conversation_id: string;
 }
 
 export const directMessageService = {
@@ -45,8 +47,9 @@ export const directMessageService = {
         .insert([
           {
             sender_id: user.id,
-            receiver_id: messageData.receiver_id,
+            receiver_ids: messageData.receiver_ids,
             content: messageData.content,
+            conversation_id: messageData.conversation_id,
           },
         ])
         .select(`

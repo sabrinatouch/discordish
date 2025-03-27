@@ -17,6 +17,7 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [otherUsers, setOtherUsers] = useState<string[]>([]);
   const [otherUserProfiles, setOtherUserProfiles] = useState<UserProfile[]>([]);
 
   useEffect(() => {
@@ -28,7 +29,8 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
         const profiles = await Promise.all(
           currentParticipants.map((participantId: string) => userService.getUserProfile(participantId))
         );
-
+        console.log('DirectMessagesView.tsx: conversation participants:', currentParticipants);
+        setOtherUsers(currentParticipants);
         setOtherUserProfiles(profiles);
         setMessages(messages);
       } catch (error) {
@@ -44,6 +46,26 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !currentUserId) return;
+
+    try {
+      console.log('DirectMessagesView.tsx: sending message to:', otherUsers);
+      const sentMessage = await directMessageService.sendDirectMessage({
+        content: newMessage,
+        receiver_ids: otherUsers,
+        conversation_id: conversationId,
+      });
+      
+      // Update local state immediately
+      setMessages(prev => [...prev, sentMessage]);
+      setNewMessage('');
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -99,7 +121,7 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={() => {}} className="p-4 border-t border-gray-700">
+      <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-700">
         <div className="flex space-x-2">
           <input
             type="text"

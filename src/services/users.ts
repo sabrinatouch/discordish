@@ -1,6 +1,10 @@
 import { supabase } from '../lib/supabase';
 import { handleSupabaseError } from '../lib/supabase';
 
+export interface User {
+  id: string;
+}
+
 export interface UserProfile {
   id: string;
   username: string;
