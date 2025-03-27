@@ -5,13 +5,6 @@ import { Conversation } from '../../services/conversations';
 import { useUser } from '../../contexts/UserContext';
 import { useParams } from 'react-router-dom';
 
-interface User {
-  id: string;
-  username: string;
-  avatar_url: string | null;
-  status: 'online' | 'offline' | 'idle' | 'dnd' | 'invisible';
-}
-
 const DirectMessagesContainer: React.FC = () => {
   const { user } = useUser();
   const { conversationId: paramConversationId } = useParams<{ conversationId: string }>();
@@ -29,7 +22,6 @@ const DirectMessagesContainer: React.FC = () => {
       <div className="w-64 border-r border-gray-700">
         <DirectMessageList
           onSelectConversation={(conversation: Conversation) => setSelectedConversationId(conversation.id)}
-          selectedConversationId={selectedConversationId || undefined}
           currentUserId={user.id}
         />
       </div>

@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { channelService } from '../../services/channels';
 import { serverService } from '../../services/servers';
 import { userService } from '../../services/users';
-import { authService } from '../../services/auth';
+//import { authService } from '../../services/auth';
 import { subscriptionService } from '../../services/subscription';
 import UserAvatar from '../user/UserAvatar';
 import { supabase } from '../../lib/supabase';

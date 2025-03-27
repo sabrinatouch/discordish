@@ -14,13 +14,11 @@ interface User {
 
 interface DirectMessageListProps {
   onSelectConversation: (conversation: Conversation) => void;
-  selectedConversationId?: string;
   currentUserId: string;
 }
 
 const DirectMessageList: React.FC<DirectMessageListProps> = ({
   onSelectConversation,
-  selectedConversationId,
   currentUserId
 }) => {
   const [users, setUsers] = useState<User[]>([]);
@@ -61,15 +59,23 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
       console.log('Selected user ID:', selectedUser.id);
 
       // Check if a conversation already exists
-      const existingConversationId = await conversationService.searchForConversationByParticipants(
+      // const existingConversationId = await conversationService.searchForConversationByParticipants(
+      //   currentUserId,
+      //   selectedUser.id
+      // );
+      const checkConversationExists = await conversationService.searchForConversationByParticipantsBoolean(
         currentUserId,
         selectedUser.id
       );
 
       let conversationId: string;
 
-      if (existingConversationId) {
-        console.log('DirectMessagesList.tsx: Conversation already exists:', existingConversationId);
+      console.log('DirectMessagesList.tsx: checkConversationExists:', checkConversationExists);
+      if (checkConversationExists) {
+        const existingConversationId = await conversationService.searchForConversationByParticipants(
+          currentUserId,
+          selectedUser.id
+        );
         conversationId = existingConversationId;
       } else {
         console.log('DirectMessagesList.tsx: Creating new conversation...');

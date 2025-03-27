@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { directMessageService, DirectMessage } from '../../services/directMessages';
-import { supabase } from '../../lib/supabase';
 import UserAvatar from '../user/UserAvatar';
 import { conversationService } from '../../services/conversations';
 import { UserProfile, userService } from '../../services/users';

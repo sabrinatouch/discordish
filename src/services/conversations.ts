@@ -39,7 +39,29 @@ export const conversationService = {
             .contains('participants', participants)
             .single();
 
+        if (error) {
+            console.error('Error searching for conversation:', error);
+            handleSupabaseError(error);
+            return null;
+        }
+
         return existingConversation ? existingConversation.id : null;
+    },
+
+    async searchForConversationByParticipantsBoolean(userId1: string, userId2: string): Promise<boolean> {
+        const participants = [userId1, userId2].sort();
+        const { count, error } = await supabase
+            .from('conversations')
+            .select('id', { count: 'exact',head: true })
+            .contains('participants', participants)
+
+        if (error || !count) {
+            console.log('conversations.ts: searchForConversationByParticipantsBoolean: Conversation does not exist');
+            return false;
+        }
+
+        console.log('conversations.ts: searchForConversationByParticipantsBoolean:', count);
+        return count > 0;
     },
 
     // Get a conversation by ID
@@ -51,6 +73,12 @@ export const conversationService = {
             .select('*')
             .eq('id', conversationId)
             .single();
+
+            if (error) {
+                console.error('Error fetching conversation:', error);
+                handleSupabaseError(error);
+                return null;
+            }
 
             // Return the conversation ID if it exists, otherwise return null
             return existingConversation ? existingConversation.id : null;
