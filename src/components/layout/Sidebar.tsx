@@ -3,10 +3,11 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { channelService } from '../../services/channels';
 import { serverService } from '../../services/servers';
 import { userService } from '../../services/users';
-import { authService } from '../../services/auth';
+//import { authService } from '../../services/auth';
 import { subscriptionService } from '../../services/subscription';
 import UserAvatar from '../user/UserAvatar';
 import { supabase } from '../../lib/supabase';
+import { useUser } from '../../contexts/UserContext';
 
 interface Server {
   id: string;
@@ -23,11 +24,12 @@ interface UserProfile {
 }
 
 const Sidebar: React.FC = () => {
+  const { user, loading } = useUser();
   const location = useLocation();
   const navigate = useNavigate();
   const [servers, setServers] = useState<Server[]>([]);
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+
 
   // Handle server click to navigate to the first channel
   const handleServerClick = async (serverId: string) => {
@@ -53,24 +55,24 @@ const Sidebar: React.FC = () => {
     const fetchData = async () => {
       try {
         // Fetch user auth info first
-        const currentAuthUser = await authService.getCurrentUser();
-        if (!currentAuthUser) return;
-        console.log('Fetched auth userId', currentAuthUser.username);
+        if (!user) return;
+        console.log('Fetched auth userId', user.username);
         
         // Fetch servers using serverService
-        const serverData = await serverService.getAllServersMemberOf(currentAuthUser.id);
+        const serverData = await serverService.getAllServersMemberOf(user.id);
         setServers(serverData || []);
         console.log('Fetched servers for auth user', serverData);
 
         // Get the full user profile from userService for additional fields
-        const userProfile = await userService.getUserProfile(currentAuthUser.id);
+        const userProfile = await userService.getUserProfile(user.id);
         if (userProfile) {
           setProfile(userProfile as UserProfile);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false);
+        //setLoading(false);
+        console.log('Sidebar.tsx: Loading complete');
       }
     };
 
