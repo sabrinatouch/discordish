@@ -58,11 +58,6 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
       console.log('Current user ID:', currentUserId);
       console.log('Selected user ID:', selectedUser.id);
 
-      // Check if a conversation already exists
-      // const existingConversationId = await conversationService.searchForConversationByParticipants(
-      //   currentUserId,
-      //   selectedUser.id
-      // );
       const checkConversationExists = await conversationService.searchForConversationByParticipantsBoolean(
         currentUserId,
         selectedUser.id

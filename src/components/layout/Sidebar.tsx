@@ -55,7 +55,6 @@ const Sidebar: React.FC = () => {
     const fetchData = async () => {
       try {
         // Fetch user auth info first
-        //const currentAuthUser = await authService.getCurrentUser();
         if (!user) return;
         console.log('Fetched auth userId', user.username);
         

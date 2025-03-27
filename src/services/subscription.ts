@@ -103,17 +103,17 @@ export const subscriptionService = {
  * @param callback Callback to handle subscription events
  * @returns Function to unsubscribe
  */
-  subscribeToConversation<T extends { sender_id: string; receiver_id: string }>(
-    payload: { currentUserId: string; otherUserId: string },
+  subscribeToConversation<T extends { conversation_id: string }>(
+    conversationId: string,
     callback: (payload: SubscriptionPayload<T>) => void
   ) {
     return this.subscribeToChanges<T>(
-      `conversation:${payload.currentUserId}:${payload.otherUserId}`,
+      `conversation:${conversationId}`,
       {
         event: '*',
         schema: 'public',
         table: 'direct_messages',
-        filter: `(sender_id=eq.${payload.currentUserId} AND receiver_id=eq.${payload.otherUserId}) OR (sender_id=eq.${payload.otherUserId} AND receiver_id=eq.${payload.currentUserId})`,
+        filter: `conversation_id=eq.${conversationId}`,
       },
       callback
     );

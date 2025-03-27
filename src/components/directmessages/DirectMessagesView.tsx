@@ -3,6 +3,7 @@ import { directMessageService, DirectMessage } from '../../services/directMessag
 import UserAvatar from '../user/UserAvatar';
 import { conversationService } from '../../services/conversations';
 import { UserProfile, userService } from '../../services/users';
+import { subscriptionService } from '../../services/subscription';
 
 interface DirectMessageViewProps {
   conversationId: string;
@@ -44,6 +45,19 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
   }, [conversationId, currentUserId]);
 
   useEffect(() => {
+    // Subscribe to new messages in the conversation
+    const unsubscribe = subscriptionService.subscribeToConversation<DirectMessage>(conversationId,
+      (payload) => {
+        console.log('DirectMessagesView.tsx: new message:', payload.new);
+        setMessages(prev => [...prev, payload.new]);
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [conversationId]);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
@@ -52,7 +66,7 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
     if (!newMessage.trim() || !currentUserId) return;
 
     try {
-      console.log('DirectMessagesView.tsx: sending message to:', otherUsers);
+      console.log('DirectMessagesView.tsx - handleSendMessage(): sending message to:', otherUsers);
       const sentMessage = await directMessageService.sendDirectMessage({
         content: newMessage,
         receiver_ids: otherUsers,
@@ -60,7 +74,7 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
       });
       
       // Update local state immediately
-      setMessages(prev => [...prev, sentMessage]);
+      //setMessages(prev => [...prev, sentMessage]);
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);
