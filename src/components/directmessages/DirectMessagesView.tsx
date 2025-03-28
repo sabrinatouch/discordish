@@ -46,7 +46,7 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
 
   useEffect(() => {
     // Subscribe to new messages in the conversation
-    const unsubscribe = subscriptionService.subscribeToConversation<DirectMessage>(conversationId,
+    const unsubscribe = subscriptionService.subscribeToConversation_DirectMessages<DirectMessage>(conversationId,
       (payload) => {
         console.log('DirectMessagesView.tsx: new message:', payload.new);
         setMessages(prev => [...prev, payload.new]);

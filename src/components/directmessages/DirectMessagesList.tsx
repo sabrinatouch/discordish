@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import UserAvatar from '../user/UserAvatar';
 import { Conversation, conversationService } from '../../services/conversations';
 import { Link } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
+import { subscriptionService } from '../../services/subscription';
 
 interface User {
   id: string;
@@ -25,6 +26,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const conversationsEndRef = useRef<HTMLDivElement>(null);
   const [userDetails, setUserDetails] = useState<{ [key: string]: User }>({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
@@ -35,8 +37,8 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
         console.log('DirectMessagesList.tsx: Loading assets...');
         console.log('DirectMessagesList.tsx: Current user:', currentUserId);
         if (currentUserId) {
-          await loadUsers(currentUserId);
-          await loadExistingConversations(currentUserId);
+          loadUsers(currentUserId);
+          loadExistingConversations(currentUserId);
         }
       } catch (error) {
         console.error('Error getting current user:', error);
@@ -45,7 +47,30 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
       }
     };
     loadAssets();
-  }, []);
+
+  }, [currentUserId]);
+
+  useEffect(() => {
+    conversationsEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [conversations]);
+
+  useEffect(() => {
+    // Subscribe to new conversations involving the current user
+    const unsubscribe = subscriptionService.subscribeToConversations_ForUser<Conversation>(
+      currentUserId,
+      (payload) => {
+        if (payload.eventType === 'INSERT') {
+          console.log('DirectMessagesList.tsx: New conversation detected:', payload.new);
+          setConversations((prevConversations) => [...prevConversations, payload.new]);
+          loadExistingConversations(currentUserId); // This made it work
+        }
+      }
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [currentUserId]);
 
   const handleSelectUser = async (selectedUser: User) => {
     try {
@@ -86,10 +111,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
       navigate(`/channels/@me/${conversationId}`);
     } catch (error) {
       console.error('Error handling user selection:', error);
-      setError('Failed to handle user selection');
     }
-
-    console.log('DirectMessagesList.tsx: handleSelectUser completed.');
   };
 
   const handleSelectConversation = async (conversation: Conversation) => {
@@ -115,7 +137,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
 
           if (error) {
             console.error('Error fetching user for conversation:', error);
-            throw error;
+            //throw error;
           }
 
           userDetailsMap[otherUserId] = otherUser;
@@ -127,8 +149,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
       setLoading(false);
     } catch (error) {
       console.error('Error in loadConversations:', error);
-      setError('Failed to load conversations');
-      setLoading(false);
+      //setLoading(false);
     }
   };
 
@@ -144,7 +165,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
 
       if (error) {
         console.error('Error loading users:', error);
-        throw error;
+        //throw error;
       }
 
       console.log('Loaded users:', data);
@@ -152,8 +173,6 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
       setLoading(false);
     } catch (error) {
       console.error('Error in loadUsers:', error);
-      setError('Failed to load users');
-      setLoading(false);
     }
   };
 

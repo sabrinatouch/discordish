@@ -98,12 +98,11 @@ export const subscriptionService = {
 
   /**
  * Subscribe to direct messages changes for a specific conversation
- * @param currentUserId Current user's ID
- * @param otherUserId Other user's ID in the conversation
+ * @param conversationId Conversation ID to subscribe to
  * @param callback Callback to handle subscription events
  * @returns Function to unsubscribe
  */
-  subscribeToConversation<T extends { conversation_id: string }>(
+  subscribeToConversation_DirectMessages<T extends { conversation_id: string }>(
     conversationId: string,
     callback: (payload: SubscriptionPayload<T>) => void
   ) {
@@ -114,6 +113,28 @@ export const subscriptionService = {
         schema: 'public',
         table: 'direct_messages',
         filter: `conversation_id=eq.${conversationId}`,
+      },
+      callback
+    );
+  },
+
+    /**
+ * Subscribe to conversation table changes
+ * @param currentUserId Current user's ID
+ * @param otherUserId Other user's ID in the conversation
+ * @param callback Callback to handle subscription events
+ * @returns Function to unsubscribe
+ */
+  subscribeToConversations_ForUser<T extends { [key: string]: any }>(
+    currentUserId: string,
+    callback: (payload: SubscriptionPayload<T>) => void
+  ) {
+    return this.subscribeToChanges<T>(
+      `conversationsForUser:${currentUserId}`,
+      {
+        event: '*',
+        schema: 'public',
+        table: 'conversations',
       },
       callback
     );
