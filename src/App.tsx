@@ -88,9 +88,14 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 
 // Layout for channel and direct message routes
 const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="flex h-screen">
+  <div className="flex flex-col h-screen">
+    <div className="w-full h-10 bg-discord-darker text-center p-2">
+      discordish
+    </div>
+    <div className="flex flex-1 overflow-hidden">
       <Sidebar />
       {children}
+    </div>
   </div>
 );
 

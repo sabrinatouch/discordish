@@ -132,22 +132,24 @@ const Sidebar: React.FC = () => {
   }
 
   return (
-    <div className="w-60 h-screen bg-gray-900 flex flex-col">
+    <div className="w-20 bg-gray-900 flex flex-col items-center bg-discord-darker border-r border-discord-darkest">
       {/* Server List */}
-      <div className="flex-1 overflow-y-auto p-2">
-        <div className="space-y-2">
+      <div className="flex-1 overflow-y-auto">
+        <div className="space-y-1">
           {/* Home Button */}
-          <Link
-            to="/channels/@me"
-            className={`flex items-center justify-center w-10 h-10 rounded-xl hover:rounded-2xl transition-all duration-200 ${
-              location.pathname === '/channels/@me' ? 'bg-indigo-600' : 'bg-gray-800 hover:bg-gray-700'
-            }`}
-          >
-            <svg className="text-white w-40 h-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-            </svg>
-          </Link>
-
+          <div className="w-full">
+            <Link
+              to="/channels/@me"
+              className={`flex items-center justify-center rounded-xl hover:bg-discord-accent-hover transition-all duration-200 ${
+                location.pathname === '/channels/@me' ? 'bg-discord-accent' : 'bg-discord-darkest'
+              }`}
+            >
+              <svg className="text-white" fill="none" stroke="currentColor" viewBox="0 0 34 34">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </Link>
+          </div>
+          <div className="border-b border-discord-darkest my-2 mx-1"></div>
           {/* Server List */}
           {servers.map((server) => (
             <button
@@ -161,8 +163,8 @@ const Sidebar: React.FC = () => {
                 <img
                   src={server.icon_url}
                   alt={server.name}
-                  width={'40px'}
-                  height={'40px'}
+                  width={'46px'}
+                  height={'46px'}
                   className="rounded-xl"
                 />
               ) : (
@@ -183,8 +185,8 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* User Profile Card */}
-      <div className="relative z-10 p-2">
-        <div className="bg-gray-800 rounded-lg shadow-lg p-2">
+      <div className="absolute bottom-0 left-0 right-0 w-84 z-30 p-2">
+        <div className="bg-discord-dark rounded-lg p-2">
           <Link
             to="/profile"
             className="flex items-center space-x-3 mb-2 p-2 rounded hover:bg-gray-700 transition-colors"

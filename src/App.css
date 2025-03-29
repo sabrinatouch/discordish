@@ -2,6 +2,31 @@
 
 /* Add this custom styles section for our status indicators */
 @layer utilities {
+
+  .bg-discord-dark {
+    background-color: #2f3136 !important;
+  }
+
+  .bg-discord-darker {
+    background-color: #202225 !important;
+  }
+
+  .bg-discord-darkest {
+    background-color: #36393f !important;
+  }
+
+  .bg-discord-light {
+    background-color: #dcddde !important;
+  }
+
+  .bg-discord-accent {
+    background-color: #5865f2 !important;
+  }
+
+  .bg-discord-accent-hover {
+    background-color: #4752c4 !important;
+  }
+
   .bg-discord-success {
     background-color: #43b581 !important;
   }
@@ -32,6 +57,10 @@
   
   .text-discord-muted {
     color: #747f8d !important;
+  }
+
+  .border-discord-darkest {
+    border-color: #36393f !important;
   }
 }
 

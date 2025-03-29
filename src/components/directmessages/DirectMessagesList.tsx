@@ -193,7 +193,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
   }
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto bg-discord-darker">
       <div className="p-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-white mb-4">Direct Messages</h2>
@@ -234,7 +234,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
             </ul>
           </div>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 overflow-y-auto max-h-[calc(100vh-4rem)]">
           {conversations.length === 0 ? (
             <p className="text-gray-400 text-center">No conversations found</p>
           ) : (
