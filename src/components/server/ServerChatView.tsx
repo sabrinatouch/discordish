@@ -17,19 +17,15 @@ interface Message {
   };
 }
 
-const ChatView: React.FC = () => {
+const ServerChatView: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { channelId } = useParams<{ channelId: string }>();
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
   useEffect(() => {
-    scrollToBottom();
+    //scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
@@ -101,7 +97,7 @@ const ChatView: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 h-screen bg-gray-700 flex flex-col">
+    <div className="flex flex-col h-full bg-discord-darkest">
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.map((message) => (
@@ -149,4 +145,4 @@ const ChatView: React.FC = () => {
   );
 };
 
-export default ChatView; 
+export default ServerChatView; 

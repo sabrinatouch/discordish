@@ -17,7 +17,7 @@ interface Server {
   icon_url: string | null;
 }
 
-const ChannelList: React.FC = () => {
+const ServerChannelList: React.FC = () => {
   const { serverId } = useParams<{ serverId: string }>();
   const location = useLocation();
   const [channels, setChannels] = useState<Channel[]>([]);
@@ -92,7 +92,7 @@ const ChannelList: React.FC = () => {
   }
 
   return (
-    <div className="w-60 h-screen bg-gray-800 flex flex-col">
+    <div className="h-full overflowy-y-auto bg-discord-darker">
       {/* Server Header */}
       <div className="h-12 flex items-center px-4 border-b border-gray-700">
         <h2 className="text-white font-semibold">{currentServer.name}</h2>
@@ -130,4 +130,4 @@ const ChannelList: React.FC = () => {
   );
 };
 
-export default ChannelList; 
+export default ServerChannelList; 

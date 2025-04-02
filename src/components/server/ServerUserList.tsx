@@ -4,7 +4,7 @@ import { serverMemberService } from '../../services/serverMembers';
 import { userService, UserProfile } from '../../services/users';
 import UserAvatar from '../user/UserAvatar';
 
-const UserList: React.FC = () => {
+const ServerUserList: React.FC = () => {
   const [members, setMembers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -73,4 +73,4 @@ const UserList: React.FC = () => {
   );
 };
 
-export default UserList; 
+export default ServerUserList; 

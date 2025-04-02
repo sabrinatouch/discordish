@@ -137,19 +137,24 @@ const Sidebar: React.FC = () => {
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-1">
           {/* Home Button */}
-          <div className="w-full">
+          <div className="flex items-center justify-center">
             <Link
               to="/channels/@me"
-              className={`flex items-center justify-center rounded-xl hover:bg-discord-accent-hover transition-all duration-200 ${
+              className={`w-[46px] h-[46px] flex items-center justify-center rounded-xl hover:bg-discord-accent-hover transition-all duration-200 ${
                 location.pathname === '/channels/@me' ? 'bg-discord-accent' : 'bg-discord-darkest'
               }`}
             >
-              <svg className="text-white" fill="none" stroke="currentColor" viewBox="0 0 34 34">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
+              <div className="">
+                <svg className="text-white w-[46px] h-[46px]" fill="none" stroke="currentColor" viewBox="0 0 34 34">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+              </div>
             </Link>
           </div>
+
+          {/* Divider */}
           <div className="border-b border-discord-darkest my-2 mx-1"></div>
+
           {/* Server List */}
           {servers.map((server) => (
             <button
@@ -185,7 +190,7 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* User Profile Card */}
-      <div className="absolute bottom-0 left-0 right-0 w-84 z-30 p-2">
+      <div className="absolute bottom-0 left-0 right-0 w-90 z-30 p-2">
         <div className="bg-discord-dark rounded-lg p-2">
           <Link
             to="/profile"

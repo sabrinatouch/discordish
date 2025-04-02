@@ -17,9 +17,9 @@ const DirectMessagesContainer: React.FC = () => {
   }, [paramConversationId]);
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full w-full">
       {/* Direct Messages List */}
-      <div className="w-64 border-r border-t border-discord-darkest">
+      <div className="w-72 border-r border-t border-discord-darkest">
         <DirectMessageList
           onSelectConversation={(conversation: Conversation) => setSelectedConversationId(conversation.id)}
           currentUserId={user.id}
