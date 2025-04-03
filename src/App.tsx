@@ -3,12 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useParams, Outlet, us
 import Login from './components/auth/Login';
 import Signup from './components/auth/Signup';
 import Sidebar from './components/layout/Sidebar';
-import ChannelList from './components/server/ServerChannelList';
-import ChatView from './components/server/ServerChatView';
 import UserProfile from './components/user/UserProfile';
 import Settings from './components/user/Settings';
 import DirectMessagesContainer from './components/directmessages/DirectMessagesContainer';
-import UserList from './components/server/ServerUserList'
 import ServerContainer from './components/server/ServerContainer';
 import { channelService } from './services/channels';
 import StatusTest from './components/user/StatusTest';
