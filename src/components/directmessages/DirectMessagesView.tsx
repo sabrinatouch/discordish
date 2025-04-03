@@ -66,7 +66,6 @@ const DirectMessageView: React.FC<DirectMessageViewProps> = ({
     if (!newMessage.trim() || !currentUserId) return;
 
     try {
-      console.log('DirectMessagesView.tsx - handleSendMessage(): sending message to:', otherUsers);
       // const sentMessage = await directMessageService.sendDirectMessage({
       //   content: newMessage,
       //   receiver_ids: otherUsers,

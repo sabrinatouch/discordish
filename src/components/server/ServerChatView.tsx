@@ -3,19 +3,9 @@ import { useParams } from 'react-router-dom';
 import { messageService } from '../../services/messages';
 import { authService } from '../../services/auth';
 import { subscriptionService } from '../../services/subscription';
+import { useUser } from '../../contexts/UserContext';
 import UserAvatar from '../user/UserAvatar';
-
-interface Message {
-  id: string;
-  content: string;
-  user_id: string;
-  channel_id: string;
-  created_at: string;
-  user: {
-    username: string;
-    avatar_url: string | null;
-  };
-}
+import { Message } from '../../services/messages';
 
 const ServerChatView: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -23,10 +13,7 @@ const ServerChatView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { channelId } = useParams<{ channelId: string }>();
-
-  useEffect(() => {
-    //scrollToBottom();
-  }, [messages]);
+  const { user } = useUser();
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -40,46 +27,56 @@ const ServerChatView: React.FC = () => {
         setMessages([]);
       } finally {
         setLoading(false);
+        console.log("ServerChatView.tsx: fetched messages", messages);
       }
     };
 
     fetchMessages();
+  }, [user]);
 
-    // Subscribe to new messages using subscriptionService
-    const unsubscribe = channelId ? 
-      subscriptionService.subscribeToMessages<Message>(
-        channelId,
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setMessages(prev => [...prev, payload.new]);
-          }
-        }
-      ) : () => {};
+  useEffect(() => {
+    // Subscribe to channel based off channelId to listen for new messages in channel
+    if (!channelId) return;
+    
+    const unsubscribe = subscriptionService.subscribeToMessages<Message>(channelId,
+      (payload) => {
+        console.log('ServerChatView.tsx: new message:', payload.new);
+        setMessages(prev => [...prev, payload.new]);
+    });
 
     return () => {
       unsubscribe();
     };
-  }, [channelId]);
+  }, [user]);
+
+  useEffect(() => {
+    console.log("ServerChatView.tsx: Scroll into view messages");
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [user]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
+    console.log("HANDLE SEND MESSAGE");
     e.preventDefault();
     if (!newMessage.trim() || !channelId) return;
 
     try {
       // Get current user from authService
-      const currentUser = await authService.getCurrentUser();
-      if (!currentUser) throw new Error('Not authenticated');
+      // const currentUser = await authService.getCurrentUser();
+      // if (!currentUser) throw new Error('Not authenticated');
 
       const messageData = {
         content: newMessage.trim(),
-        user_id: currentUser.id,
+        user_id: user.id,
         channel_id: channelId,
       };
 
       const data = await messageService.sendMessage(messageData);
-      if (data) {
-        setMessages(prev => [...prev, data]);
-      }
+      //await messageService.sendMessage(messageData);
+
+      console.log('ServerChatView.tsx: handleSendMessage:', data);
+      // if (data) {
+      //   setMessages(prev => [...prev, data]);
+      // }
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);

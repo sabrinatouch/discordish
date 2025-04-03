@@ -156,7 +156,22 @@ export const subscriptionService = {
         table: 'messages',
         filter: `channel_id=eq.${channelId}`,
       },
-      callback
+      async (payload) => {
+        const { new: newMessage } = payload;
+  
+        const { data: user, error } = await supabase
+          .from('users')
+          .select('id, username, avatar_url, status')
+          .eq('id', newMessage.user_id)
+          .single();
+  
+        const enrichedMessage = {
+          ...newMessage,
+          user,
+        };
+  
+        callback({ ...payload, new: enrichedMessage });
+      }
     );
   },
 

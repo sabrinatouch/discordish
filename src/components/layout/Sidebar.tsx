@@ -132,7 +132,7 @@ const Sidebar: React.FC = () => {
   }
 
   return (
-    <div className="w-20 bg-gray-900 flex flex-col items-center bg-discord-darker border-r border-discord-darkest">
+    <div className="min-w-20 bg-gray-900 flex flex-col items-center bg-discord-darker border-r border-discord-darkest">
       {/* Server List */}
       <div className="flex-1 overflow-y-auto">
         <div className="space-y-1">
@@ -190,7 +190,7 @@ const Sidebar: React.FC = () => {
       </div>
 
       {/* User Profile Card */}
-      <div className="absolute bottom-0 left-0 right-0 w-90 z-30 p-2">
+      <div className="absolute bottom-0 left-0 right-0 w-92 z-30 p-2">
         <div className="bg-discord-dark rounded-lg p-2">
           <Link
             to="/profile"

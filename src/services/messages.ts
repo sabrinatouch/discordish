@@ -1,6 +1,18 @@
 import { supabase } from '../lib/supabase';
 import { handleSupabaseError } from '../lib/supabase';
 
+export interface Message {
+  id: string;
+  content: string;
+  user_id: string;
+  channel_id: string;
+  created_at: string;
+  user: {
+    username: string;
+    avatar_url: string | null;
+  }
+}
+
 export interface SendMessageData {
   content: string;
   channel_id: string;
@@ -23,10 +35,8 @@ export const messageService = {
         .select(`
           *,
           user:users (
-            id,
             username,
-            avatar_url,
-            status
+            avatar_url
           )
         `)
         .single();
@@ -35,6 +45,29 @@ export const messageService = {
       return data;
     } catch (error) {
       handleSupabaseError(error);
+    }
+  },
+
+  async getChatMessages(channelId: string, limit: number = 50) {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select(`
+          *,
+          user:users (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('channel_id', channelId)
+        .order('created_at', { ascending: true })
+        .limit(limit);
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      handleSupabaseError(error);
+      return [];
     }
   },
 
@@ -135,29 +168,6 @@ export const messageService = {
       return data;
     } catch (error) {
       handleSupabaseError(error);
-    }
-  },
-
-  async getChatMessages(channelId: string, limit: number = 50) {
-    try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          user:users (
-            username,
-            avatar_url
-          )
-        `)
-        .eq('channel_id', channelId)
-        .order('created_at', { ascending: true })
-        .limit(limit);
-
-      if (error) throw error;
-      return data;
-    } catch (error) {
-      handleSupabaseError(error);
-      return [];
     }
   },
 }; 
