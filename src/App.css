@@ -42,6 +42,10 @@
   .bg-discord-muted {
     background-color: #747f8d !important;
   }
+
+  .text-discord-accent {
+    color: #5865f2 !important;
+  }
   
   .text-discord-success {
     color: #43b581 !important;

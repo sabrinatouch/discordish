@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { messageService } from '../../services/messages';
-import { authService } from '../../services/auth';
 import { subscriptionService } from '../../services/subscription';
 import { useUser } from '../../contexts/UserContext';
 import UserAvatar from '../user/UserAvatar';
@@ -32,7 +31,7 @@ const ServerChatView: React.FC = () => {
     };
 
     fetchMessages();
-  }, [user]);
+  }, [channelId]);
 
   useEffect(() => {
     // Subscribe to channel based off channelId to listen for new messages in channel
@@ -47,36 +46,25 @@ const ServerChatView: React.FC = () => {
     return () => {
       unsubscribe();
     };
-  }, [user]);
+  }, [channelId]);
 
   useEffect(() => {
-    console.log("ServerChatView.tsx: Scroll into view messages");
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [user]);
+    // messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
-    console.log("HANDLE SEND MESSAGE");
     e.preventDefault();
     if (!newMessage.trim() || !channelId) return;
 
     try {
-      // Get current user from authService
-      // const currentUser = await authService.getCurrentUser();
-      // if (!currentUser) throw new Error('Not authenticated');
-
       const messageData = {
         content: newMessage.trim(),
         user_id: user.id,
         channel_id: channelId,
       };
 
-      const data = await messageService.sendMessage(messageData);
-      //await messageService.sendMessage(messageData);
+      await messageService.sendMessage(messageData);
 
-      console.log('ServerChatView.tsx: handleSendMessage:', data);
-      // if (data) {
-      //   setMessages(prev => [...prev, data]);
-      // }
       setNewMessage('');
     } catch (error) {
       console.error('Error sending message:', error);

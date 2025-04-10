@@ -159,7 +159,7 @@ export const subscriptionService = {
       async (payload) => {
         const { new: newMessage } = payload;
   
-        const { data: user, error } = await supabase
+        const { data: user } = await supabase
           .from('users')
           .select('id, username, avatar_url, status')
           .eq('id', newMessage.user_id)
@@ -204,6 +204,27 @@ export const subscriptionService = {
       'profile_changes',
       {
         table: 'users',
+      },
+      callback
+    );
+  },
+
+  /**
+   * Subscribe to server channel changes
+   * @param callback Callback to handle subscription events
+   * @returns Function to unsubscribe
+   */
+  subscribeToServerChannels<T extends { [key: string]: any }>(
+    serverId: string,
+    callback: (payload: { new: T; old: T; eventType: string }) => void
+  ) {
+    return this.subscribeToChanges<T>(
+      `channels:${serverId}`,
+      {
+        event: '*',
+        schema: 'public',
+        table: 'channels',
+        filter: `server_id=eq.${serverId}`,
       },
       callback
     );
