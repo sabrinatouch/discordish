@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
-import { channelService, CreateChannelData } from '../../services/channels';
+import { channelService } from '../../services/channels';
 import { serverService } from '../../services/servers';
 import { subscriptionService } from '../../services/subscription';
 import { Dialog, DialogBackdrop } from '@headlessui/react'
@@ -81,7 +81,7 @@ const ServerChannelList: React.FC = () => {
       type: 'text',
       server_id: serverId
     });
-    
+
     fetchServerChannels();
     setOpen(false);
   }
