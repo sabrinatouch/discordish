@@ -34,14 +34,14 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
   useEffect(() => {
     const loadAssets = async () => {
       try {
-        console.log('DirectMessagesList.tsx: Loading assets...');
-        console.log('DirectMessagesList.tsx: Current user:', currentUserId);
+        //console.log('DirectMessagesList.tsx: Loading assets...');
+        //console.log('DirectMessagesList.tsx: Current user:', currentUserId);
         if (currentUserId) {
           loadUsers(currentUserId);
           loadExistingConversations(currentUserId);
         }
       } catch (error) {
-        console.error('Error getting current user:', error);
+        //console.error('Error getting current user:', error);
         setError('Failed to get current user');
         setLoading(false);
       }
@@ -76,12 +76,12 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
     try {
       setIsModalOpen(false);
       if (!currentUserId) {
-        console.error('No current user ID found');
+        //console.error('No current user ID found');
         return;
       }
 
-      console.log('Current user ID:', currentUserId);
-      console.log('Selected user ID:', selectedUser.id);
+      //console.log('Current user ID:', currentUserId);
+      //console.log('Selected user ID:', selectedUser.id);
 
       const checkConversationExists = await conversationService.searchForConversationByParticipantsBoolean(
         currentUserId,
@@ -90,7 +90,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
 
       let conversationId: string;
 
-      console.log('DirectMessagesList.tsx: checkConversationExists:', checkConversationExists);
+      //console.log('DirectMessagesList.tsx: checkConversationExists:', checkConversationExists);
       if (checkConversationExists) {
         const existingConversationId = await conversationService.getConversationByParticipants(
           currentUserId,
@@ -98,12 +98,12 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
         );
         conversationId = existingConversationId;
       } else {
-        console.log('DirectMessagesList.tsx: Creating new conversation...');
+        //console.log('DirectMessagesList.tsx: Creating new conversation...');
         conversationId = await conversationService.createConversation(
           currentUserId,
           selectedUser.id
         );
-        console.log('New conversation created:', conversationId);
+        //console.log('New conversation created:', conversationId);
         loadExistingConversations(currentUserId);
       }
 
@@ -115,14 +115,14 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
   };
 
   const handleSelectConversation = async (conversation: Conversation) => {
-    console.log('DirectMessagesList.tsx: handleSelectConversation...');
+    //console.log('DirectMessagesList.tsx: handleSelectConversation...');
     onSelectConversation(conversation);
   };
 
   const loadExistingConversations = async (currentUserId: string) => {
     try {
       const conversations = await conversationService.getAllExistingConversations(currentUserId);
-      console.log('Loaded conversations:', conversations);
+      //console.log('Loaded conversations:', conversations);
 
       // Fetch user details for each conversation
       const userDetailsMap: { [key: string]: User } = {};
@@ -155,7 +155,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
 
   const loadUsers = async (userId: string) => {
     try {
-      console.log('Loading users for userId:', userId);
+      //console.log('Loading users for userId:', userId);
       // Get all users except the current user
       const { data, error } = await supabase
         .from('users')
@@ -168,7 +168,7 @@ const DirectMessageList: React.FC<DirectMessageListProps> = ({
         //throw error;
       }
 
-      console.log('Loaded users:', data);
+      //console.log('Loaded users:', data);
       setUsers(data || []);
       setLoading(false);
     } catch (error) {

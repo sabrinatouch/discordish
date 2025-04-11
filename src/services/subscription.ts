@@ -214,9 +214,9 @@ export const subscriptionService = {
    * @param callback Callback to handle subscription events
    * @returns Function to unsubscribe
    */
-  subscribeToServerChannels<T extends { [key: string]: any }>(
+  subscribeToServerChannels<T extends { [serverId: string]: any }>(
     serverId: string,
-    callback: (payload: { new: T; old: T; eventType: string }) => void
+    callback: (payload: SubscriptionPayload<T>) => void
   ) {
     return this.subscribeToChanges<T>(
       `channels:${serverId}`,
