@@ -1,8 +1,8 @@
 # To Do List
 
 1. Real-time messaging
-    ~~- Direct messaging~~
-    ~~- Server chat~~
+    - ~~Direct messaging~~
+    - ~~Server chat~~
     - Future improvements: Using Redux to implement global state to have notifications
 2. Channel/DM organization
     - How to make a UI element moveable and grabable?
