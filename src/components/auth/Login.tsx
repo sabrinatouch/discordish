@@ -32,6 +32,30 @@ const Login: React.FC = () => {
     }
   };
 
+  const handleGuestLogin = async (e: React.SyntheticEvent) => {
+    console.log('handleGuestLogin');
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { user, session } = await authService.login({
+        email: 'guest@email.com',
+        password: 'guestpw',
+      });
+
+      if (error) throw error;
+
+      if (user && session) {
+        navigate('/channels/@me');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred during login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#1E1F22] px-4">
       <div className="bg-[#2B2D31] p-8 rounded-md shadow-2xl w-full max-w-[480px]">
@@ -86,6 +110,12 @@ const Login: React.FC = () => {
             </button>
           </div>
         </form>
+        <p className="mt-4 text-sm text-[#949BA4]">
+          Visiting to check out the app?{' '}
+          <button onClick={handleGuestLogin} className="text-[#00A8FC] hover:underline">
+            Login as Guest
+          </button>
+        </p>
         <p className="mt-4 text-sm text-[#949BA4]">
           Need an account?{' '}
           <Link to="/signup" className="text-[#00A8FC] hover:underline">
